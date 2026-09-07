@@ -13,6 +13,7 @@ import { shortPhotoLocation } from './location';
 import { formatCaptureDate } from './format';
 import { usePhotoViewer } from './PhotoViewerProvider';
 import { useJournalView } from './journal-view';
+import { useImageReveal } from './image-reveal';
 
 interface PhotoTileProps {
   photo: Photo;
@@ -37,6 +38,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, imageSrc, priority, is
   // hundreds further away settle instantly, out of sight. Motion reads `layout`
   // once at mount, so the prop stays constant and the transition does the gating.
   const near = useInView(tile, { margin: '300% 0px 300% 0px' });
+  useImageReveal(tile);
   const reduceMotion = useReducedMotion();
   const transition = near && !reduceMotion ? LAYOUT_TRANSITION : INSTANT;
   const place = shortPhotoLocation(photo);

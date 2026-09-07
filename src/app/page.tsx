@@ -46,7 +46,6 @@ export default async function HomePage({ searchParams }: PageProps) {
       <nav aria-label="Main navigation" className="gallery-nav">
         <Link href="/" className="gallery-wordmark">Brito</Link>
         <div className="gallery-nav-links">
-          <a href="#archive" aria-current="page">Photographs</a>
           <ThemeToggle />
           <Link href="/collections">Collections</Link>
           <a href="https://instagram.com/kelbrxto" target="_blank" rel="noopener noreferrer" aria-label="Brito on Instagram" className="inline-flex min-h-8 min-w-8 items-center justify-center"><InstagramIcon size={18} strokeWidth={1.5} aria-hidden="true" /></a>

@@ -141,15 +141,10 @@
   }
 }
 
-/* First-paint entrances run in CSS so they begin the moment the page appears, before hydration. */
-@keyframes reveal-in { from { opacity:.8; transform:translateY(var(--reveal-y,12px)); } to { opacity:1; transform:none; } }
-@keyframes page-in { from { opacity:.75; } to { opacity:1; } }
-.reveal-in { animation:reveal-in .95s cubic-bezier(.4,0,.2,1) var(--reveal-delay,0s) both; }
-.page-in { animation:page-in .8s cubic-bezier(.4,0,.2,1) both; }
-/* One orchestrated opening: navigation, then intro, then the toolbar band, each a beat later. */
-.gallery-nav { --reveal-y:8px; animation:reveal-in .95s cubic-bezier(.4,0,.2,1) both; }
-.archive-toolbar, .archive-filters { --reveal-y:10px; animation:reveal-in .95s cubic-bezier(.4,0,.2,1) .18s both; }
-@media (prefers-reduced-motion:reduce) { .reveal-in, .page-in, .gallery-nav, .archive-toolbar, .archive-filters { animation:none; } }
+/* Photographs rise into place as they scroll into view; everything else is simply there. */
+.archive-tile[data-reveal] img { transition:opacity .9s cubic-bezier(.4,0,.2,1), transform .9s cubic-bezier(.4,0,.2,1); }
+.archive-tile[data-reveal="pending"] img { opacity:0; transform:translateY(14px); }
+@media (prefers-reduced-motion:reduce) { .archive-tile[data-reveal] img { transition:none; } .archive-tile[data-reveal="pending"] img { opacity:1; transform:none; } }
 
 /* One type family, black ink, white space. */
 body { font-weight: 350; }
