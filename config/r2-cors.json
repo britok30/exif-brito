@@ -1,0 +1,20 @@
+{
+  "rules": [
+    {
+      "id": "photo-blog-uploads",
+      "allowed": {
+        "origins": [
+          "http://localhost:3000",
+          "https://www.kelbrxto.com"
+        ],
+        "methods": [
+          "PUT"
+        ],
+        "headers": [
+          "Content-Type"
+        ]
+      },
+      "maxAgeSeconds": 3600
+    }
+  ]
+}

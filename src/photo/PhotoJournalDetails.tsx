@@ -1,0 +1,107 @@
+'use client';
+
+import type { Photo } from '@/db';
+import { PhotoMark } from '@/components/icons/photo-mark';
+import { RecipeDialog } from './RecipeDialog';
+import { labelForFujifilmSimulation, type FujifilmRecipe } from '@/exif/fujifilm';
+import { formatAppleLensText, isLensApple } from '@/platforms/apple';
+import { shortPhotoLocation } from './location';
+import { formatExposureTime } from './format';
+
+const formatExposure = (photo: Photo) =>
+  [
+    photo.focalLength && `${photo.focalLength}mm`,
+    photo.fNumber && `ƒ/${photo.fNumber}`,
+    formatExposureTime(photo.exposureTime),
+    photo.iso && `ISO ${photo.iso}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+const formatLens = (photo: Photo) => {
+  if (!photo.lensModel) return photo.lensMake ?? undefined;
+  return isLensApple(photo.lensModel)
+    ? formatAppleLensText(photo.lensModel)
+    : photo.lensModel;
+};
+
+const formatCamera = (photo: Photo) =>
+  [photo.make, photo.model].filter(Boolean).join(' ') || undefined;
+
+export function PhotoJournalDetails({ photo }: { photo: Photo }) {
+  const camera = formatCamera(photo);
+  const lens = formatLens(photo);
+  const exposure = formatExposure(photo);
+
+  const specs: Array<{ label: string; value: string }> = [];
+  if (camera) specs.push({ label: 'Camera', value: camera });
+  if (lens) specs.push({ label: 'Lens', value: lens });
+  if (exposure) specs.push({ label: 'Exposure', value: exposure });
+  const place = shortPhotoLocation(photo);
+  if (place) specs.push({ label: 'Location', value: place });
+
+  const recipe = photo.recipeData as FujifilmRecipe | null;
+  const filmLabel = photo.film
+    ? labelForFujifilmSimulation(photo.film)
+    : undefined;
+
+  return (
+    <div className="journal-details">
+        {photo.caption && (
+          <p className="mt-6 text-sm leading-relaxed text-foreground">
+            {photo.caption}
+          </p>
+        )}
+
+        {(specs.length > 0 || photo.make || photo.film) && (
+          <div className="mt-8 space-y-4">
+            {photo.film && recipe?.whiteBalance ? (
+              <RecipeDialog
+                film={photo.film}
+                recipe={recipe}
+                make={photo.make ?? undefined}
+              />
+            ) : (
+              <div className="flex items-center gap-2">
+                <PhotoMark
+                  make={photo.make ?? undefined}
+                  film={photo.film ?? undefined}
+                  height={16}
+                  className="text-foreground"
+                />
+                {filmLabel && (
+                  <span className="text-sm tracking-tight font-light text-foreground">
+                    {filmLabel}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {specs.length > 0 && (
+              <dl className="space-y-2 pt-1">
+                {specs.map(spec => (
+                  <SpecRow key={spec.label} label={spec.label} value={spec.value} />
+                ))}
+              </dl>
+            )}
+          </div>
+        )}
+
+    </div>
+  );
+}
+
+function SpecRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline gap-3 text-sm">
+      <dt className="gallery-label whitespace-nowrap">
+        {label}
+      </dt>
+      <span
+        aria-hidden
+        className="mb-[3px] flex-1 border-b border-dotted border-foreground"
+      />
+      <dd className="min-w-0 text-right font-light text-foreground [overflow-wrap:anywhere]">{value}</dd>
+    </div>
+  );
+}
