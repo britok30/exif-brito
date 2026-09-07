@@ -1,3 +1,5 @@
+vi.mock('@/collections/sync', () => ({ syncDestinationCollections: vi.fn(async () => {}) }));
+import { syncDestinationCollections } from '@/collections/sync';
 import { beforeEach, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ auth: vi.fn(), update: vi.fn(), set: vi.fn(), where: vi.fn(), returning: vi.fn(), inArray: vi.fn(), eq: vi.fn(), and: vi.fn(), revalidate: vi.fn() }));
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
@@ -34,6 +36,7 @@ it('atomically publishes only the selected hidden IDs, preserving files and edit
   expect(mocks.where).toHaveBeenCalledWith('both-conditions');
   expect(mocks.set).toHaveBeenCalledWith({ hidden: false, updatedAt: expect.any(Date) });
   expect(mocks.update).toHaveBeenCalledTimes(1);
+  expect(syncDestinationCollections).toHaveBeenCalledWith(['abcdefgh', 'ijklmnop']);
   expect(mocks.revalidate).toHaveBeenCalledOnce();
 });
 it('supports safe retries and reports failures without exposing database details', async () => {
@@ -43,4 +46,10 @@ it('supports safe retries and reports failures without exposing database details
   const response = await post({ ids: ['abcdefgh'] });
   expect(response.status).toBe(500);
   expect(await response.text()).not.toContain('secret');
+});
+
+it('repairs collection membership on retry even when the photos were already published', async () => {
+  mocks.returning.mockResolvedValueOnce([]);
+  expect((await post({ ids: ['abcdefgh'] })).status).toBe(200);
+  expect(syncDestinationCollections).toHaveBeenCalledWith(['abcdefgh']);
 });

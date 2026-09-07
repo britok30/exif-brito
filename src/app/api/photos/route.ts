@@ -1,3 +1,4 @@
+import { syncDestinationCollections } from '@/collections/sync';
 import { normalizeLocationName, knownLocationFromTags } from '@/photo/location';
 import { NextRequest, NextResponse } from 'next/server';
 import { extractExif } from '@/exif';
@@ -54,7 +55,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid photo details' }, { status: 400 });
   }
   const existing = await findUploadedPhoto(key);
-  if (existing) return NextResponse.json({ photo: existing });
+  if (existing) {
+    try { await syncDestinationCollections([existing.id]); }
+    catch { return NextResponse.json({ error: 'Your photograph is saved. Retry to finish adding it to collections.' }, { status: 500 }); }
+    return NextResponse.json({ photo: existing });
+  }
 
   let buffer: Buffer;
   try {
@@ -105,6 +110,7 @@ export async function POST(req: NextRequest) {
     };
 
     const photo = await createUploadedPhoto(key, merged);
+    await syncDestinationCollections([photo.id]);
     revalidatePhotos();
     return NextResponse.json({ photo });
   } catch {

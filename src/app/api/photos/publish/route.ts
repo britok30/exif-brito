@@ -1,3 +1,4 @@
+import { syncDestinationCollections } from '@/collections/sync';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { and, eq, inArray } from 'drizzle-orm';
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
     // A single statement publishes only the explicitly selected hidden photographs.
     const published = await db.update(photos).set({ hidden: false, updatedAt: new Date() })
       .where(and(inArray(photos.id, ids), eq(photos.hidden, true))).returning({ id: photos.id });
+    await syncDestinationCollections(ids);
     revalidatePhotos();
     revalidatePath('/');
     revalidatePath('/admin/photos');

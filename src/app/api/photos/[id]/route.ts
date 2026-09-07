@@ -1,3 +1,4 @@
+import { syncDestinationCollections } from '@/collections/sync';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { revalidatePhotos } from '@/photo/query';
@@ -19,6 +20,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       updatedAt: new Date(),
     }).where(eq(photos.id, id)).returning({ id: photos.id });
     if (!photo) return NextResponse.json({ error: 'This photograph no longer exists.' }, { status: 404 });
+    await syncDestinationCollections([id]);
     revalidatePhotos();
     revalidatePath('/');
     revalidatePath(`/p/${id}`);

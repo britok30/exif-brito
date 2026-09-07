@@ -5,7 +5,12 @@ import { useEffect, useState } from 'react';
 type Theme = 'light' | 'dark';
 const STORAGE_KEY = 'theme';
 
-// The matching pre-paint script lives in public/theme-boot.js and reads the same key.
+/**
+ * Inlined in the document head (see layout) so it runs before first paint: a
+ * saved choice wins, otherwise the system preference is followed. Rendered
+ * inline on purpose; an external script arrives after the page has painted.
+ */
+export const THEME_BOOT_SCRIPT = `(function(){try{var s=localStorage.getItem('${STORAGE_KEY}');var d=s==='dark'||s==='light'?s:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=d}catch(e){}})()`;
 
 function applyTheme(theme: Theme, animate: boolean) {
   const root = document.documentElement;

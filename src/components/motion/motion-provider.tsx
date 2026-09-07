@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { MotionConfig, useAnimate, useReducedMotion } from 'motion/react';
+import { hasHydrated, markHydrated } from './hydration';
 
 function PageEntrance({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -10,6 +11,8 @@ function PageEntrance({ children }: { children: ReactNode }) {
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
+    // The server-rendered page is already on screen; only client navigations fade in.
+    if (!hasHydrated()) { markHydrated(); return; }
     if (reduceMotion) return;
     const animation = animate(scope.current, { opacity: [0.75, 1] }, { duration: 0.8, ease: [0.4, 0, 0.2, 1] });
     const element = scope.current;

@@ -7,7 +7,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { collectionSlug } from './validation';
 
 type Entry = { id: string; title: string; src: string; hidden: boolean };
-type Collection = { id: string; title: string; slug: string; description: string; photoIds: string[] };
+type Collection = { id: string; title: string; slug: string; description: string; automatic?: boolean; photoIds: string[] };
 export function CollectionStudio({ initial, photos }: { initial: Collection[]; photos: Entry[] }) {
   const [collections, setCollections] = useState(initial);
   const [draft, setDraft] = useState<Collection | null>(null);
@@ -64,6 +64,7 @@ export function CollectionStudio({ initial, photos }: { initial: Collection[]; p
         <div className="series-fields"><label>Title<input required maxLength={255} value={draft.title} onChange={event => update({ title: event.target.value, ...(draft.slug === collectionSlug(draft.title) ? { slug: collectionSlug(event.target.value) } : {}) })} /></label>
           <label>URL name<input required maxLength={120} pattern="[a-z0-9]+(-[a-z0-9]+)*" value={draft.slug} onChange={event => update({ slug: event.target.value })} /><small>/collections/{draft.slug || 'your-series'}</small></label>
           <label className="series-description-field">Introduction<textarea rows={3} maxLength={5000} value={draft.description} onChange={event => update({ description: event.target.value })} /></label></div>
+        {draft.automatic && <p className="series-start">New photographs from this destination join when you publish them.</p>}
         <div className="series-section-heading"><h2>Your sequence · {draft.photoIds.length}</h2><p>The first visible photograph is the cover.</p></div>
         <ol className="series-sequence">{draft.photoIds.map((id, index) => {
           const photo = byId.get(id); if (!photo) return null;
@@ -73,6 +74,7 @@ export function CollectionStudio({ initial, photos }: { initial: Collection[]; p
             <button type="button" aria-label={`Remove ${photo.title} from collection`} onClick={() => update({ photoIds: draft.photoIds.filter(value => value !== id) })}><X size={16} /></button></motion.li>;
         })}</ol>
         {!draft.photoIds.length && <p className="series-start">Select photographs below to begin your sequence.</p>}
+        {draft.automatic && <p className="series-start">New photographs from this destination join when you publish them.</p>}
         <div className="series-section-heading"><h2>Add photographs</h2><label className="sr-only" htmlFor="series-search">Search photographs by title or location</label><input id="series-search" type="search" placeholder="Search title or location" value={search} onChange={event => setSearch(event.target.value)} /></div>
         <div className="series-picker">{available.map(photo => <button key={photo.id} type="button" aria-label={`Add ${photo.title}`} onClick={() => { setDraft(current => current && !current.photoIds.includes(photo.id) ? { ...current, photoIds: [...current.photoIds, photo.id] } : current); setMessage(''); }}>
           <Image src={photo.src} alt="" width={160} height={120} sizes="(max-width: 700px) 40vw, 160px" unoptimized={!photo.src.startsWith('/')} /><span>{photo.title}</span>{photo.hidden && <small>Hidden</small>}</button>)}

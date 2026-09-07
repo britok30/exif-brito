@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
-import Script from 'next/script';
 import './globals.css';
 import { MotionProvider } from '@/components/motion/motion-provider';
+import { THEME_BOOT_SCRIPT } from '@/components/theme-toggle';
 
 const messina = localFont({
   variable: '--font-messina',
@@ -29,9 +29,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${messina.variable} h-full`} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col">
-        {/* Applies the saved or system theme before first paint (public/theme-boot.js); the toggle covers a client-rendered layout. */}
-        <Script src="/theme-boot.js" strategy="beforeInteractive" /><a href="#main" className="skip-link">Skip to content</a><MotionProvider>{children}</MotionProvider></body>
+      <head>
+        {/* Runs before first paint so the page never flashes the wrong theme; the toggle covers a client-rendered layout. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
+      <body className="min-h-full flex flex-col"><a href="#main" className="skip-link">Skip to content</a><MotionProvider>{children}</MotionProvider></body>
     </html>
   );
 }

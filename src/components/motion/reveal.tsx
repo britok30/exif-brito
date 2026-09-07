@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { motion, useAnimate, useInView, useReducedMotion, type HTMLMotionProps } from 'motion/react';
+import { hasHydrated } from './hydration';
 
 interface RevealProps extends Omit<HTMLMotionProps<'div'>, 'ref'> {
   delay?: number;
@@ -16,6 +17,8 @@ export function Reveal({ children, delay = 0, y = 12, once = true, ...rest }: Re
 
   useEffect(() => {
     if (!inView || reduceMotion) return;
+    // Already visible when the page hydrated: leave it as the server painted it.
+    if (!hasHydrated()) return;
     const animation = animate(scope.current, { opacity: [0.8, 1], y: [y, 0] }, {
       duration: 0.95, delay, ease: [0.4, 0, 0.2, 1],
     });

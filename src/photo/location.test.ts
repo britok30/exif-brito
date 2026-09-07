@@ -7,7 +7,7 @@ it('shows the city and country instead of a Japanese street address', () => {
   expect(photo.locationName).toContain('13 Fukuinekakimotochō');
 });
 it('handles US state/ZIP and Spanish postal prefixes', () => {
-  expect(shortPhotoLocation({ locationName: '100 Main St, Miami, FL 33101, USA', tags: [] })).toBe('Miami, USA');
+  expect(shortPhotoLocation({ locationName: '100 Main St, Miami, FL 33101, USA', tags: [] })).toBe('Miami, United States');
   expect(shortPhotoLocation({ locationName: 'Calle Mayor 1, 28013 Madrid, Spain', tags: [] })).toBe('Madrid, Spain');
 });
 it('preserves concise labels and only uses tags as a fallback or matching city', () => {
@@ -36,4 +36,11 @@ it('standardizes London labels while preserving other Londons and full addresses
   expect(knownLocationFromTags(['London', 'Travel'])).toBe('London, UK');
   expect(normalizeLocationName('London, Canada')).toBe('London, Canada');
   expect(normalizeLocationName('10 Downing Street, London, UK')).toBe('10 Downing Street, London, UK');
+});
+
+it('standardizes the reviewed towns and Google province labels without displaying SA as a city', () => {
+  for (const [input,expected] of [['Split','Split, Croatia'],['Dubrovnik','Dubrovnik, Croatia'],['Grindelwald','Grindelwald, Switzerland'],['Positano, SA, Italy','Positano, Italy'],['Amalfi, SA, Italy','Amalfi, Italy']]) {
+    expect(normalizeLocationName(input)).toBe(expected);
+    expect(shortPhotoLocation({locationName:input,tags:[]})).toBe(expected);
+  }
 });

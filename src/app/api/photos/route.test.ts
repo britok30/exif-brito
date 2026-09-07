@@ -1,3 +1,5 @@
+vi.mock('@/collections/sync', () => ({ syncDestinationCollections: vi.fn(async () => {}) }));
+import { syncDestinationCollections } from '@/collections/sync';
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 
 beforeAll(() => {

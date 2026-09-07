@@ -73,6 +73,18 @@
   --fg-alpha: rgba(255, 255, 255, .1);
   color-scheme: dark;
 }
+/* Before any script runs, and without one, the system preference decides. An explicit light choice still wins. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000;
+    --fg: #ffffff;
+    --fg-2: #8c8c8c;
+    --fg-3: #555555;
+    --fg-alpha: rgba(255, 255, 255, .1);
+    color-scheme: dark;
+  }
+  :root:not([data-theme]) .theme-toggle > [data-choice="dark"] { color: var(--fg); }
+}
 /* Switching themes cross-fades a snapshot of the page (see theme-toggle); page loads and system changes stay instant. */
 ::view-transition-old(root), ::view-transition-new(root) {
   animation-duration: var(--theme-duration);

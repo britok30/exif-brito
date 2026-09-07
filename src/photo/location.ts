@@ -2,6 +2,11 @@ import type { Photo } from '@/db';
 
 // Explicit collection vocabulary; unknown city names are never assigned a country.
 const knownLocations: Record<string, string> = {
+  split: 'Split, Croatia', dubrovnik: 'Dubrovnik, Croatia',
+  grindelwald: 'Grindelwald, Switzerland',
+  positano: 'Positano, Italy', 'positano, sa, italy': 'Positano, Italy',
+  amalfi: 'Amalfi, Italy', 'amalfi, sa, italy': 'Amalfi, Italy', furore: 'Furore, Italy',
+  'miami, fl, usa': 'Miami, United States', 'miami, usa': 'Miami, United States',
   london: 'London, UK', 'london, uk': 'London, UK', 'london, united kingdom': 'London, UK',
   kyoto: 'Kyoto, Japan', 'kyoto, japan': 'Kyoto, Japan',
   tokyo: 'Tokyo, Japan', 'tokyo, japan': 'Tokyo, Japan',
@@ -32,6 +37,8 @@ const localityWithoutPostalCode = (value: string) => value.replace(/^\d{4,6}\s+/
 export function shortPhotoLocation(photo: Pick<Photo, 'locationName' | 'tags'>): string | undefined {
   const address = photo.locationName?.trim();
   if (!address) return knownLocationFromTags(photo.tags) || (photo.tags?.[0] ? normalizeLocationName(photo.tags[0]) : undefined);
+  const normalized = normalizeLocationName(address);
+  if (normalized !== address) return normalized;
   const parts = address.split(',').map(part => part.trim()).filter(Boolean);
   if (parts.length <= 2) return normalizeLocationName(parts.join(', '));
   const country = parts.at(-1)!;
