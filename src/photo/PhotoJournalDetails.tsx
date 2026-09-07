@@ -6,6 +6,7 @@ import { RecipeDialog } from './RecipeDialog';
 import { labelForFujifilmSimulation } from '@/exif/fujifilm';
 import { formatAppleLensText, isLensApple } from '@/platforms/apple';
 import { shortPhotoLocation } from './location';
+import { formatCameraName } from './camera';
 import { formatExposureTime } from './format';
 import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { SharePhotoButton } from './SharePhotoButton';
@@ -28,8 +29,7 @@ const formatLens = (photo: GalleryPhoto) => {
     : photo.lensModel;
 };
 
-const formatCamera = (photo: GalleryPhoto) =>
-  [photo.make, photo.model].filter(Boolean).join(' ') || undefined;
+const formatCamera = (photo: GalleryPhoto) => formatCameraName(photo.make, photo.model);
 
 export function PhotoJournalDetails({ photo }: { photo: GalleryPhoto }) {
   const open = usePhotoViewer();

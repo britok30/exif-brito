@@ -14,6 +14,7 @@ import { UploadQueue, type QueueSnapshot, type UploadItem } from '@/photo/upload
 import { uploadDraftStore } from '@/photo/upload-drafts';
 import { parseUploadTags, UPLOAD_ACCEPT } from '@/photo/upload-policy';
 import { formatExposureTime } from '@/photo/format';
+import { formatCameraName } from '@/photo/camera';
 import { StudioIntro } from '@/components/studio-intro';
 import { SelectField } from '@/components/ui/select';
 
@@ -161,7 +162,7 @@ function UploadRow({ item, selected, onSelect, onChange, onPublish, onRetry, onR
   const editable = ['queued', 'ready', 'error'].includes(item.status);
   const saving = item.status === 'saving';
   const saved = item.status === 'saved';
-  const camera = [item.exif?.make, item.exif?.model].filter(Boolean).join(' ');
+  const camera = formatCameraName(item.exif?.make, item.exif?.model);
   const exposure = [item.exif?.focalLength ? `${item.exif.focalLength}mm` : '', item.exif?.fNumber ? `ƒ/${item.exif.fNumber}` : '',
     formatExposureTime(item.exif?.exposureTime), item.exif?.iso ? `ISO ${item.exif.iso}` : ''].filter(Boolean).join(' · ');
   return <li className="upload-row">

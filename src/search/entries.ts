@@ -1,4 +1,5 @@
 import type { SearchEntry } from './types';
+import { formatCameraName } from '@/photo/camera';
 
 export interface SearchPhoto {
   id: string; title: string | null; caption: string | null; locationName: string | null;
@@ -14,7 +15,7 @@ export function searchKeywords(photo: SearchPhoto): string {
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const monthName = months[month - 1];
   return [photo.title, photo.caption, photo.semanticDescription, photo.locationName,
-    ...(photo.tags || []), photo.make, photo.model, photo.lensModel, photo.film?.replaceAll('-', ' '),
+    ...(photo.tags || []), photo.make, photo.model, formatCameraName(photo.make, photo.model), photo.lensModel, photo.film?.replaceAll('-', ' '),
     date, monthName, monthName?.slice(0, 3), photo.id].filter(Boolean).join(', ');
 }
 

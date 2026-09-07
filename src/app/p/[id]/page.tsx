@@ -19,6 +19,7 @@ import { cache } from 'react';
 import { getPhotoById, getPhotoIndex } from '@/photo/query';
 import { withDisplayUrls } from '@/photo/url';
 import { formatCaptureDate, formatExposureTime } from '@/photo/format';
+import { formatCameraName } from '@/photo/camera';
 import { RecipeDialog } from '@/photo/RecipeDialog';
 import { labelForFujifilmSimulation, type FujifilmRecipe } from '@/exif/fujifilm';
 import { rawSourceKey } from '@/photo/raw-source';
@@ -41,7 +42,7 @@ export default async function PhotoPage({ params }: Props) {
   const next = index >= 0 ? archive[index + 1] : undefined;
   const title = photo.title || photo.locationName || photo.tags?.[0] || 'Untitled';
   const specs = [
-    ['Camera', [photo.make, photo.model].filter(Boolean).join(' ')],
+    ['Camera', formatCameraName(photo.make, photo.model)],
     ['Lens', photo.lensModel || photo.lensMake],
     ['Focal length', photo.focalLength ? `${photo.focalLength}mm` : null],
     ['35mm equivalent', photo.focalLengthIn35mmFormat ? `${photo.focalLengthIn35mmFormat}mm` : null],

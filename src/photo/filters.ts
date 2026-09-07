@@ -1,4 +1,5 @@
 import type { Photo } from '@/db';
+import { formatCameraName } from './camera';
 
 export type FacetKind = 'tag' | 'film' | 'camera' | 'lens' | 'year';
 
@@ -83,9 +84,9 @@ export function buildPhotoFacets(photos: Photo[]): PhotoFacets {
     ),
     cameras: tally(
       photos
-        .map(p => cameraOf(p))
-        .filter((v): v is string => Boolean(v))
-        .map(v => ({ value: v })),
+        // The value stays the raw EXIF pair so existing filter links keep working; only the label is formatted.
+        .map(p => { const value = cameraOf(p); return value ? { value, label: formatCameraName(p.make, p.model) ?? value } : undefined; })
+        .filter((v): v is { value: string; label: string } => Boolean(v)),
     ),
     lenses: tally(
       photos
