@@ -41,7 +41,7 @@ export function EditPhotoButton({ photo, previewUrl }: { photo: Photo; previewUr
       const result = await response.json();
       if (!response.ok) { setError(result.error || 'Your changes couldn’t be saved. Please try again.'); return; }
       setBaseline(values); setOpen(false); setSaved(true);
-      if (values.hidden && !photo.hidden) router.push('/admin/photos');
+      if (values.hidden && !photo.hidden) router.push('/admin/unpublished');
       router.refresh();
     } catch { setError('The connection was interrupted. Your changes are still here; try saving again.'); }
     finally { setPending(false); }

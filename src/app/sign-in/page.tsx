@@ -10,7 +10,7 @@ const failure = 'We couldn’t sign you in. Check your email and password, then 
 export default async function SignInPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string; error?: string }> }) {
   const params = await searchParams;
   const callback = params.callbackUrl;
-  const redirectTo = callback?.startsWith('/') && !callback.startsWith('//') && !callback.includes('\\') ? callback : '/admin/photos';
+  const redirectTo = callback?.startsWith('/') && !callback.startsWith('//') && !callback.includes('\\') ? callback : '/admin';
   async function signInAction(_previous: { error: string }, formData: FormData): Promise<{ error: string }> {
     'use server';
     try {

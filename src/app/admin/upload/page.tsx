@@ -70,7 +70,7 @@ export default function UploadPage() {
   return <main id="main" tabIndex={-1} className="archive-page upload-studio">
     <GalleryHeader />
     <StudioIntro title="Add photographs." note={<>One frame or an entire collection.<br />Original quality, every detail kept.</>}
-      actions={<Link href="/admin/photos" className="studio-button">Photo library</Link>} />
+      actions={<Link href="/admin/unpublished" className="studio-button">Review unpublished</Link>} />
 
     <section aria-label="Choose photographs" className={`archive-content upload-dropzone ${dragging ? 'is-dragging' : ''}`}
       onDragOver={event => { event.preventDefault(); setDragging(true); }}

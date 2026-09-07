@@ -19,7 +19,7 @@ it('rejects unauthenticated writes before accessing the database', async () => {
 it('updates only editorial fields and refreshes the public and private views', async () => {
   expect((await patch(details)).status).toBe(200);
   expect(mocks.set).toHaveBeenCalledWith({ title: 'Kyoto', caption: 'A quiet morning.', locationName: null, tags: ['Japan'], hidden: false, updatedAt: expect.any(Date) });
-  expect(mocks.revalidate.mock.calls.map(call => call[0])).toEqual(['/', '/p/ezuihkxn', '/admin/photos']);
+  expect(mocks.revalidate.mock.calls.map(call => call[0])).toEqual(['/', '/p/ezuihkxn', '/admin']);
 });
 it('allows clearing fields and hiding and restoring a photograph', async () => {
   await patch({ ...details, title: '', caption: '', tags: [], hidden: true });

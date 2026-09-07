@@ -1,0 +1,24 @@
+/* The studio dashboard: four figures at the scale of the year headings, then rule-topped bands like every other page. */
+.studio-dashboard { display:flex; flex-direction:column; gap:56px; padding-bottom:80px; }
+.studio-figures { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0 16px; border-top:1px solid var(--fg); }
+.studio-figure { display:flex; flex-direction:column; gap:14px; padding:20px 0 24px; font-size:12px; }
+.studio-figure strong { font-size:clamp(48px,6vw,96px); font-weight:300; line-height:.95; letter-spacing:-.06em; font-variant-numeric:tabular-nums; }
+.studio-figure small { font-size:12px; color:var(--fg-2); }
+.studio-figure:hover > span { text-decoration:underline; text-underline-offset:4px; }
+.studio-nav { margin-right:8px; }
+.studio-note { max-width:560px; padding:16px 0 0; font-size:12px; line-height:1.8; color:var(--fg-2); }
+.studio-destinations { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 48px; list-style:none; }
+.studio-destinations a { display:flex; align-items:center; gap:16px; padding:12px 0; border-bottom:1px solid var(--fg); font-size:12px; min-height:56px; color:var(--fg-2); }
+.studio-destinations a:hover { color:var(--fg); }
+.studio-destination-thumbnail { position:relative; display:block; flex:0 0 64px; width:64px; height:48px; overflow:hidden; background:var(--fg-alpha); }
+.studio-destination-thumbnail img { object-fit:cover; }
+.studio-destination-name { flex:1; min-width:0; overflow-wrap:anywhere; color:var(--fg); }
+.studio-destination-count { flex:none; font-variant-numeric:tabular-nums; }
+.studio-confirm-input { width:100%; min-height:44px; margin-top:8px; padding:10px 12px; border:1px solid var(--fg); border-radius:0; background:var(--bg); color:var(--fg); font:inherit; font-size:12px; }
+.studio-confirm-label { display:block; margin-top:20px; font-size:11px; color:var(--fg-2); }
+.library-page-jump { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
+.library-page-jump input[type=number] { width:64px; min-height:44px; border:1px solid var(--fg); background:transparent; color:var(--fg); text-align:center; font:inherit; font-size:12px; }
+@media(max-width:900px) { .studio-nav { display:none; } }
+@media(max-width:700px) { .studio-figures { grid-template-columns:repeat(2,minmax(0,1fr)); } .studio-destinations { grid-template-columns:1fr; } .studio-dashboard .archive-toolbar { grid-template-columns:1fr; gap:10px; } }
+@media(max-width:540px) { .library-pagination { flex-wrap:wrap; } .library-page-jump { order:-1; width:100%; } }
+.studio-dashboard .archive-toolbar > :last-child { justify-self:end; }

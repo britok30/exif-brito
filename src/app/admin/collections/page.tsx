@@ -15,7 +15,7 @@ export default async function ManageCollections() {
   const [collections, library] = await Promise.all([getCollections(true), getLibrary()]);
   return <main id="main" tabIndex={-1} className="archive-page"><GalleryHeader />
     <StudioIntro title="Your collections." note={<>Gather a place, a journey,<br />or a feeling into a series.</>}
-      actions={<Link href="/admin/photos" className="studio-button">Photo library</Link>} />
+      actions={<Link href="/collections" className="studio-button">View collections</Link>} />
     <section className="archive-content" aria-label="Collections">
       <header className="archive-toolbar"><p>All collections</p><span className="archive-total">{collections.length} {collections.length === 1 ? 'collection' : 'collections'} / {library.length} photographs</span><span /></header>
       <CollectionStudio initial={collections.map(item => ({ id: item.id, title: item.title, slug: item.slug, description: item.description || '', automatic: automaticLocations(item.location).length > 0, photoIds: item.photos.map(photo => photo.id) }))}

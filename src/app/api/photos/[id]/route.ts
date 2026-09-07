@@ -24,7 +24,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     revalidatePhotos();
     revalidatePath('/');
     revalidatePath(`/p/${id}`);
-    revalidatePath('/admin/photos');
+    revalidatePath('/admin', 'layout');
     return NextResponse.json({ photo });
   } catch {
     return NextResponse.json({ error: 'Your changes couldn’t be saved. Please try again.' }, { status: 500 });

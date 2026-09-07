@@ -78,9 +78,9 @@ Open `/admin/photos` to edit published and hidden photographs, or use Edit on a 
 
 ## Immersive photo viewer
 
-Click a gallery or Journal image to browse its current selection in a fullscreen viewer; caption links still open the detail page, and modified clicks retain normal link behavior. Swipe or use Left/Right to move between photographs. Pinch, double-tap/double-click, or use the zoom controls to enlarge up to 4×, then drag to pan within the image bounds. With the image focused, use `+`/`−` to zoom, `0` to reset, and Shift + arrow keys to pan. Zooming requests the original file while retaining the display image until it loads. Adjacent display copies are prefetched; original files are never prefetched.
+Click a gallery or Journal image to browse its current selection in a fullscreen viewer; caption links still open the detail page, and modified clicks retain normal link behavior. Swipe or use Left/Right to move between photographs. Pinch, double-tap/double-click, or use the zoom controls to enlarge up to 4×, then drag to pan within the image bounds. With the image focused, use `+`/`−` to zoom, `0` to reset, and Shift + arrow keys to pan. Zooming uses the display copy. Adjacent display copies are prefetched; originals are not served by the public viewer.
 
-Escape, Close, or browser Back closes the viewer and restores the opener's focus and exact scroll position without remounting the gallery. Browser Forward reopens it. The URL hash identifies the active photograph and supports direct links while retaining gallery filters. Public viewers only receive public photographs; a hidden photograph's private detail viewer is limited to that photograph. Display and original-image errors offer separate retries, zoom resets between photographs, and reduced-motion preferences are respected. The same viewer is available in Studio and on photograph detail pages.
+Escape, Close, or browser Back closes the viewer and restores the opener's focus and exact scroll position without remounting the gallery. Browser Forward reopens it. The URL hash identifies the active photograph and supports direct links while retaining gallery filters. Public viewers only receive public photographs; a hidden photograph's private detail viewer is limited to that photograph. Display-image errors offer retries, zoom resets between photographs, and reduced-motion preferences are respected. The same viewer is available in Studio and on photograph detail pages.
 
 ## Curated collections
 
@@ -88,8 +88,16 @@ Open `/admin/collections` (also linked from the private photo library) to create
 
 Public collection pages retain their sequence across Gallery, Journal, and the immersive viewer. Hidden photographs are excluded from public collection queries, covers, counts, and viewer data. URL names are unique, failed saves retain edits, and leaving a changed editor prompts before discarding them.
 
-## Local focus review
+## Uploading and reviewing photographs
 
-`/admin/review` is an authenticated, local-first review surface. Generate private previews with `node scripts/prepare-photo-review.mjs /path/to/DCIM FROM-DATE UNTIL-DATE "London"` (up to 1,000 JPEGs; the end date is exclusive). The ignored `.local/photo-review/manifest.json` holds review notes and focus flags; no previews or source paths are committed or published. Initial flags are `check`, for review before marking `clear` or `blurred`. Likely blurred frames remain recoverable through the filter.
+The Neon `photos` table is the source of truth for saved photographs, EXIF, locations, and visibility. R2 stores originals and generated display copies. A browser upload queue or a local SD-card manifest is temporary staging, not the saved library.
 
-Nothing starts selected. Only clicking **Continue with …** copies those selected originals into browser recovery storage and opens the upload queue. Studio uploads them but requires a separate Publish action. Preview requests require authentication, and original reads verify the same card, file size, and modification time. This local review requires this computer; reconnect the card to read originals. RAW files are untouched.
+- `/admin/upload`: choose new files and manage their upload queue. Recovery drafts live in this browser's IndexedDB until they are finalized into the library. The existing upload controls can finalize a photograph as published or hidden.
+- `/admin/unpublished`: review every saved, unpublished photograph, regardless of whether it came from a single upload, a batch, a migration, or an SD-card import. Select photographs here and explicitly publish the selection.
+- `/admin/photos`: manage the complete saved library, including published photographs.
+- `/admin`: private dashboard with library totals, unpublished destinations, uploads, collections, and a confirmed clear-unpublished action. `/admin/review` has been removed.
+- Publishing a selection leaves other unpublished photographs saved. Clearing unpublished removes only the confirmed records that remain unpublished, including their collection memberships; stored image files and SD-card originals are retained. New imports and published records are excluded. Library pagination supports direct page entry while preserving filters.
+
+The previous review page read `.local/photo-review/manifest.json`, a single computer-local snapshot last prepared for London. It did not follow database imports and is no longer the Studio review screen. The legacy preparation scripts and authenticated file-reading helpers remain available for local tooling, but their manifests are not a source of truth for library contents or publication status.
+
+Published photographs have their own Studio page at `/admin/published`. Old visibility query links redirect to the corresponding page, preserving search, destination, view, and page number.

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     await syncDestinationCollections(ids);
     revalidatePhotos();
     revalidatePath('/');
-    revalidatePath('/admin/photos');
+    revalidatePath('/admin', 'layout');
     for (const id of ids) revalidatePath(`/p/${id}`);
     return NextResponse.json({ published: published.map(photo => photo.id) });
   } catch {
