@@ -9,7 +9,7 @@ export function photoLabel(photo: MetadataPhoto) {
 }
 export function publicMetadata({ title, description, path, photoId }: { title: string; description: string; path: string; photoId?: string }): Metadata {
   const fullTitle = title === SITE_TITLE ? title : `${title} — ${SITE_NAME}`;
-  const image = { url: absoluteUrl(photoId ? `/og/${photoId}` : '/og'), width:1200, height:630, alt:title };
+  const image = { url: absoluteUrl(photoId ? `/og/${photoId}?v=2` : '/og?v=2'), width:1200, height:630, alt:title };
   return {
     title: title === SITE_TITLE ? { absolute: title } : title, description,
     alternates: { canonical: absoluteUrl(path) },

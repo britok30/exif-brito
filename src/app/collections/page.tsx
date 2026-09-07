@@ -1,4 +1,5 @@
 import { publicMetadata } from '@/seo/metadata';
+import { getPhotos } from '@/photo/query';
 import Link from 'next/link';
 import Image from 'next/image';
 import { GalleryHeader } from '@/components/gallery-header';
@@ -9,8 +10,8 @@ import { getCollections } from '@/collections/query';
 import { imagePath } from '@/photo/url';
 export const dynamic = 'force-dynamic';
 export async function generateMetadata() {
-  const collections = await getCollections();
-  return publicMetadata({title:'Photography Collections',description:'Explore Brito’s photography by destination. Visual journeys through cities, coastlines, and everyday life.',path:'/collections',photoId:collections[0]?.photos[0]?.id});
+  const cover = (await getPhotos(1))[0];
+  return publicMetadata({title:'Photography Collections',description:'Explore Brito’s photography by destination. Visual journeys through cities, coastlines, and everyday life.',path:'/collections',photoId:cover?.id});
 }
 export default async function CollectionsPage() {
   const collections = await getCollections();

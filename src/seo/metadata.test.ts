@@ -6,7 +6,7 @@ it('gives a public photograph its own canonical and stable large social preview'
  const metadata=photoMetadata(photo);
  expect(metadata.title).toBe('Positano, Italy · 2025-08-19');
  expect(metadata.alternates?.canonical).toBe('https://www.kelbrxto.com/p/abcdefgh');
- expect(metadata.openGraph).toMatchObject({images:[{url:'https://www.kelbrxto.com/og/abcdefgh',width:1200,height:630}]});
+ expect(metadata.openGraph).toMatchObject({images:[{url:'https://www.kelbrxto.com/og/abcdefgh?v=2',width:1200,height:630}]});
  expect(metadata.twitter).toMatchObject({card:'summary_large_image'});
 });
 it('keeps hidden photographs out of indexing and social previews',()=>{
