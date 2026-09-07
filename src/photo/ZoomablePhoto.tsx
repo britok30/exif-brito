@@ -15,10 +15,6 @@ export function ZoomablePhoto({ photo, preview, navigate }: { photo: ViewerPhoto
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [originalRequested, setOriginalRequested] = useState(false);
-  const [originalLoaded, setOriginalLoaded] = useState(false);
-  const [originalFailed, setOriginalFailed] = useState(false);
-  const [originalAttempt, setOriginalAttempt] = useState(0);
   const points = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef({ x: 0, y: 0, pinched: false });
   const tap = useRef({ time: 0, x: 0, y: 0 });
@@ -29,7 +25,6 @@ export function ZoomablePhoto({ photo, preview, navigate }: { photo: ViewerPhoto
   }
   function update(next: ViewTransform, animate = false) { live.current = next; setSmooth(animate); setView(next); }
   function zoom(scale: number, clientX?: number, clientY?: number, animate = false) {
-    if (scale > 1.01 && photo.original !== photo.src) setOriginalRequested(true);
     const rect = stage.current!.getBoundingClientRect();
     update(zoomView(live.current, scale, { x: (clientX ?? rect.left + rect.width / 2) - rect.left - rect.width / 2,
       y: (clientY ?? rect.top + rect.height / 2) - rect.top - rect.height / 2 }, size()), animate);
@@ -109,14 +104,10 @@ export function ZoomablePhoto({ photo, preview, navigate }: { photo: ViewerPhoto
         {preview && !loaded && <img className="viewer-preview" src={preview} alt="" aria-hidden="true" draggable={false} />}
         <img key={`display-${attempt}`} className="viewer-full-image" src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} draggable={false}
           style={{ opacity: loaded ? 1 : 0 }} onLoad={() => { setLoaded(true); setFailed(false); }} onError={() => setFailed(true)} />
-        {originalRequested && <img key={`original-${originalAttempt}`} className="viewer-preview viewer-original" src={photo.original} alt="" aria-hidden="true" draggable={false}
-          style={{ opacity: originalLoaded ? 1 : 0 }} onLoad={() => setOriginalLoaded(true)} onError={() => setOriginalFailed(true)} />}
       </motion.div>
-      {!loaded && !originalLoaded && !failed && <span className="viewer-loading" role="status">Loading photograph…</span>}
-      {loaded && originalRequested && !originalLoaded && !originalFailed && <span className="viewer-loading" role="status">Loading full resolution…</span>}
+      {!loaded && !failed && <span className="viewer-loading" role="status">Loading photograph…</span>}
     </div>
-    {failed && !originalLoaded && <div className="viewer-load-error" role="alert"><p>This photograph couldn’t load.</p><button type="button" className="studio-button" onClick={() => { setFailed(false); setAttempt(value => value + 1); }}>Try again</button></div>}
-    {originalFailed && <div className="viewer-original-error" role="status"><span>Preview quality</span><button type="button" onClick={() => { setOriginalFailed(false); setOriginalAttempt(value => value + 1); }}>Retry original</button></div>}
+    {failed && <div className="viewer-load-error" role="alert"><p>This photograph couldn’t load.</p><button type="button" className="studio-button" onClick={() => { setFailed(false); setAttempt(value => value + 1); }}>Try again</button></div>}
     <div className="viewer-zoom-controls" aria-label="Photograph zoom">
       <button type="button" aria-label="Zoom out" disabled={view.scale <= 1} onClick={() => zoom(view.scale / 1.5, undefined, undefined, true)}><Minus size={17} /></button>
       <button type="button" aria-label="Reset zoom" onClick={() => update(FIT, true)}><RotateCcw size={13} /><span>{Math.round(view.scale * 100)}%</span></button>

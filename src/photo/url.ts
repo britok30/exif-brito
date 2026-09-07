@@ -16,7 +16,8 @@ export async function getDisplayUrl(
 /** Stable, unsigned path for next/image; falls back to the URL itself outside S3. */
 export function imagePath(url: string): string {
   if (!isS3Url(url) || !S3_BASE_URL) return url;
-  return `/api/image/${url.slice(S3_BASE_URL.length + 1)}`;
+  const key = url.slice(S3_BASE_URL.length + 1);
+  return `/api/image/${key.startsWith('photos/thumb/') ? key : `display/${key}`}`;
 }
 
 /**

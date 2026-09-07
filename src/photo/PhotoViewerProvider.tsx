@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode, type MouseEvent } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { ZoomablePhoto } from './ZoomablePhoto';
 import type { ViewerPhoto } from './viewer-data';
@@ -95,7 +95,7 @@ export function PhotoViewerProvider({ photos, children }: { photos: ViewerPhoto[
         }}>
         <header className="photo-viewer-toolbar">
           <DialogTitle className="gallery-label">{photo.title}</DialogTitle>
-          <div><a href={photo.original} target="_blank" rel="noopener noreferrer">Open original<ArrowUpRight size={14} aria-hidden="true" /></a>
+          <div>
             <button type="button" className="photo-viewer-close" aria-label="Close photograph" onClick={close}><X size={22} strokeWidth={1.25} /></button></div>
         </header>
         <DialogDescription className="sr-only">Use left and right arrows or swipe to browse. Pinch, double-tap, or use the zoom buttons to enlarge; drag to pan. When the image is focused, use plus or minus to zoom, zero to reset, and Shift with arrow keys to pan. Escape closes the viewer and returns to where you opened it.</DialogDescription>

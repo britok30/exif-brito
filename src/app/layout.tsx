@@ -5,6 +5,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import { MotionProvider } from '@/components/motion/motion-provider';
 import { THEME_BOOT_SCRIPT } from '@/components/theme-toggle';
+import { ImageProtection } from '@/photo/ImageProtection';
 import { Analytics } from '@vercel/analytics/next';
 
 const messina = localFont({
@@ -39,7 +40,7 @@ export default function RootLayout({
         {/* Runs before first paint so the page never flashes the wrong theme; the toggle covers a client-rendered layout. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
-      <body className="min-h-full flex flex-col"><a href="#main" className="skip-link">Skip to content</a><MotionProvider>{children}</MotionProvider><Analytics /></body>
+      <body className="min-h-full flex flex-col"><a href="#main" className="skip-link">Skip to content</a><MotionProvider>{children}</MotionProvider><ImageProtection /><Analytics /></body>
     </html>
   );
 }

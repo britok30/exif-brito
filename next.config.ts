@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return [{ source: '/_next/image', headers: [
+      { key: 'Cross-Origin-Resource-Policy', value: 'same-site' },
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+    ] }];
+  },
   async redirects() {
     return [{ source: '/en/admin/:path*', destination: '/admin/:path*', permanent: false }];
   },

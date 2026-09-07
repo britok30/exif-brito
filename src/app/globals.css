@@ -142,9 +142,9 @@
 }
 
 /* Photographs rise into place as they scroll into view; everything else is simply there. */
-.archive-tile[data-reveal] img { transition:opacity .9s cubic-bezier(.4,0,.2,1), transform .9s cubic-bezier(.4,0,.2,1); }
-.archive-tile[data-reveal="pending"] img { opacity:0; transform:translateY(14px); }
-@media (prefers-reduced-motion:reduce) { .archive-tile[data-reveal] img { transition:none; } .archive-tile[data-reveal="pending"] img { opacity:1; transform:none; } }
+[data-reveal] img { transition:opacity .9s cubic-bezier(.4,0,.2,1), transform .9s cubic-bezier(.4,0,.2,1); }
+[data-reveal="pending"] img { opacity:0; transform:translateY(14px); }
+@media (prefers-reduced-motion:reduce) { [data-reveal] img { transition:none; } [data-reveal="pending"] img { opacity:1; transform:none; } }
 
 /* One type family, black ink, white space. */
 body { font-weight: 350; }
@@ -484,7 +484,7 @@ main:focus { outline:none; }
 .viewer-original-error button { min-height:44px; text-decoration:underline; text-underline-offset:4px; }
 
 /* Curated series share the gallery's white space and typography. */
-.series-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:80px 48px; padding:20px 0 100px; }
+.series-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:64px 16px; padding:32px 0 100px; }
 .series-card { display:block; }
 .series-cover { position:relative; width:100%; aspect-ratio:4/3; }
 .series-cover img { object-fit:contain; }
@@ -610,3 +610,14 @@ main:focus { outline:none; }
 .library-select-photo:hover, .library-select-photo.is-selected { color:var(--fg); }
 .library-select-photo input { width:15px; height:15px; accent-color:var(--fg); cursor:pointer; }
 @media(max-width:540px) { .library-selection-bar { gap:12px; padding:14px 0; } .library-selection-actions { width:100%; } .library-selection-actions .primary { flex:1; } .library-selection-bar span { max-width:32ch; } }
+/* Keep photographs viewable and zoomable without native drag/save callouts. */
+img, .viewer-gesture-stage {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media print {
+  img, .viewer-gesture-stage { visibility: hidden !important; }
+}

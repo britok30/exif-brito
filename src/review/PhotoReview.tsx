@@ -2,7 +2,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Maximize2, X } from 'lucide-react';
-import { Reveal } from '@/components/motion/reveal';
+import { ImageReveal } from '@/photo/ImageReveal';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { uploadDraftStore } from '@/photo/upload-drafts';
 import { prepareReview } from './prepare';
@@ -38,13 +38,13 @@ export function PhotoReview({ version, items }: { version: string; items: Item[]
         {continueButton}
       </div>
     </header>
-    <div className="review-grid">{visible.map(item => <Reveal key={item.id}><article className="review-card">
+    <div className="review-grid">{visible.map(item => <ImageReveal key={item.id}><article className="review-card">
       <button type="button" className="review-image" aria-label={`Enlarge ${item.name}`} onClick={() => { setPreview(item); }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`/api/review/${item.id}`} alt={item.name} width={item.width} height={item.height} loading="lazy" /><Maximize2 size={15} strokeWidth={1.5} aria-hidden="true" /></button>
       <label><input type="checkbox" checked={selected.has(item.id)} disabled={busy} onChange={event => setSelected(current => { const next = new Set(current); if (event.target.checked) next.add(item.id); else next.delete(item.id); return next; })} /><span>{item.name}</span>{item.focus === 'blurred' && <span className="review-focus">Soft focus</span>}</label>
       {item.note && <p>{item.note}</p>}
-    </article></Reveal>)}</div>
+    </article></ImageReveal>)}</div>
     {!visible.length && <div className="archive-empty"><h2>Nothing sharp in this roll.</h2><button type="button" className="underline underline-offset-4" onClick={() => setShowBlurred(true)}>Show every photograph</button></div>}
     <footer className="review-prepare"><p>Your selection is uploaded next. Publish when you’re ready.</p>{continueButton}<p role="status">{message}</p></footer>
     <Dialog open={!!preview} onOpenChange={open => { if (!open) setPreview(null); }}>
