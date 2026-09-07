@@ -23,7 +23,8 @@ function PageEntrance({ children }: { children: ReactNode }) {
     };
   }, [pathname, reduceMotion, animate, scope]);
 
-  return <div ref={scope} className="flex flex-1 flex-col">{children}</div>;
+  // `.page-in` fades the first paint in with CSS; Motion handles later client navigations.
+  return <div ref={scope} className="page-in flex flex-1 flex-col">{children}</div>;
 }
 
 export function MotionProvider({ children }: { children: ReactNode }) {

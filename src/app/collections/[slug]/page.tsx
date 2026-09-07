@@ -24,7 +24,7 @@ export default async function CollectionPage({ params }: Props) {
   if (!collection) notFound();
   const entries = withImageSources(collection.photos);
   return <PhotoViewerProvider photos={entries.map(viewerPhoto)}><main id="main" tabIndex={-1} className="archive-page"><GalleryHeader />
-    <Reveal className="gallery-intro series-intro"><div><Link href="/collections" className="gallery-label">Collections</Link><h1>{collection.title}</h1></div>
+    <Reveal className="gallery-intro series-intro" delay={0.08}><div><Link href="/collections" className="gallery-label">Collections</Link><h1>{collection.title}</h1></div>
       {collection.description && <p className="series-description">{collection.description}</p>}</Reveal>
     <section className="archive-content" aria-label={collection.title}><header className="archive-toolbar"><p>A photographic series</p><span className="archive-total">{entries.length} photographs</span><ViewSwitcher /></header>
       <PhotoCollection photos={entries} /></section><GalleryFooter />

@@ -9,7 +9,7 @@ import { Reveal } from '@/components/motion/reveal';
 export function StudioIntro({ label = 'Private studio', title, note, actions }: {
   label?: string; title: ReactNode; note?: ReactNode; actions?: ReactNode;
 }) {
-  return <Reveal className="gallery-intro studio-intro" y={12}>
+  return <Reveal className="gallery-intro studio-intro" y={12} delay={0.08}>
     <div><p className="gallery-label">{label}</p><h1>{title}</h1></div>
     {(note || actions) && <div className="studio-intro-aside">
       {note && <p className="gallery-intro-note">{note}</p>}

@@ -14,7 +14,7 @@ export async function generateMetadata() {
 export default async function CollectionsPage() {
   const collections = await getCollections();
   return <main id="main" tabIndex={-1} className="archive-page"><GalleryHeader />
-    <Reveal className="gallery-intro"><h1>Collections.</h1><p className="gallery-intro-note">A closer look.<br />One series at a time.</p></Reveal>
+    <Reveal className="gallery-intro" delay={0.08}><h1>Collections.</h1><p className="gallery-intro-note">A closer look.<br />One series at a time.</p></Reveal>
     <div className="archive-content"><div className="series-grid">{collections.map(collection => {
       const cover = collection.photos[0]; const src = imagePath(cover.thumbnailUrl || cover.url);
       return <Reveal key={collection.id}><Link href={`/collections/${collection.slug}`} className="series-card">

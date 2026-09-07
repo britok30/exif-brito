@@ -53,7 +53,7 @@ export default async function HomePage({ searchParams }: PageProps) {
         </div>
       </nav>
 
-      <Reveal className="gallery-intro" y={16}>
+      <Reveal className="gallery-intro" y={16} delay={0.08}>
         <div><h1>Photographs.</h1></div>
         <p className="gallery-intro-note">Places, people,<br />and passing moments.</p>
       </Reveal>
