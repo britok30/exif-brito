@@ -166,14 +166,10 @@ export function RecipeDialog({ film, recipe, make, trigger }: RecipeDialogProps)
                   {section.rows.map(row => (
                     <div
                       key={row.label}
-                      className="flex items-baseline gap-3 text-sm"
+                      className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] items-baseline gap-x-6 gap-y-1 text-sm"
                     >
                       <dt className="text-foreground">{row.label}</dt>
-                      <span
-                        aria-hidden
-                        className="mb-[3px] flex-1 border-b border-dotted border-foreground"
-                      />
-                      <dd className="font-light tabular-nums text-foreground">
+                      <dd className="min-w-0 text-right font-light tabular-nums text-foreground [overflow-wrap:anywhere]">
                         {row.value}
                       </dd>
                     </div>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useId, useState } from 'react';
-import { MapPin, Search } from 'lucide-react';
+import { MapPin } from 'lucide-react';
+import IconSearch from '@/components/icons/IconSearch';
 import { Input } from '@/components/ui/input';
 
 interface Suggestion { id: string; text: string; main: string; secondary: string }
@@ -33,7 +34,7 @@ export function LocationInput({ value, onChange }: { value: string; onChange(val
   const expanded = open && query.trim().length >= 2;
   return <div className="location-search">
     <label htmlFor={id}>Location</label>
-    <div className="location-search-field"><Search size={15} aria-hidden="true" />
+    <div className="location-search-field"><span aria-hidden="true"><IconSearch width={24} /></span>
       <Input id={id} value={value} maxLength={255} autoComplete="off" placeholder="Search a city or address"
         role="combobox" aria-autocomplete="list" aria-expanded={expanded} aria-controls={`${id}-list`}
         aria-activedescendant={expanded && active >= 0 && suggestions[active] ? `${id}-${active}` : undefined}

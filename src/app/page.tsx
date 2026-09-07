@@ -1,3 +1,4 @@
+import { SearchButton } from '@/search/SearchProvider';
 import { publicMetadata } from '@/seo/metadata';
 import { SITE_TITLE, SITE_DESCRIPTION } from '@/seo/site';
 import Link from 'next/link';
@@ -46,7 +47,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       <nav aria-label="Main navigation" className="gallery-nav">
         <Link href="/" className="gallery-wordmark">Brito</Link>
         <div className="gallery-nav-links">
-          <ThemeToggle />
+          <SearchButton /><ThemeToggle />
           <Link href="/collections">Collections</Link>
           <a href="https://instagram.com/kelbrxto" target="_blank" rel="noopener noreferrer" aria-label="Brito on Instagram" className="inline-flex min-h-8 min-w-8 items-center justify-center"><InstagramIcon size={18} strokeWidth={1.5} aria-hidden="true" /></a>
         </div>

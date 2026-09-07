@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { ZoomablePhoto } from './ZoomablePhoto';
 import type { ViewerPhoto } from './viewer-data';
+import { SharePhotoButton } from './SharePhotoButton';
 
 const ViewerContext = createContext<((id: string, event: MouseEvent<HTMLElement>) => void) | null>(null);
 export const usePhotoViewer = () => useContext(ViewerContext);
@@ -96,6 +97,7 @@ export function PhotoViewerProvider({ photos, children }: { photos: ViewerPhoto[
         <header className="photo-viewer-toolbar">
           <DialogTitle className="gallery-label">{photo.title}</DialogTitle>
           <div>
+            <SharePhotoButton key={photo.id} id={photo.id} title={photo.title} />
             <button type="button" className="photo-viewer-close" aria-label="Close photograph" onClick={close}><X size={22} strokeWidth={1.25} /></button></div>
         </header>
         <DialogDescription className="sr-only">Use left and right arrows or swipe to browse. Pinch, double-tap, or use the zoom buttons to enlarge; drag to pan. When the image is focused, use plus or minus to zoom, zero to reset, and Shift with arrow keys to pan. Escape closes the viewer and returns to where you opened it.</DialogDescription>

@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import IconGrid from '@/components/icons/IconGrid';
+import IconStacked from '@/components/icons/IconStacked';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { animate, useReducedMotion } from 'motion/react';
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
@@ -64,7 +66,7 @@ export function ViewSwitcher() {
       if (view === target) return;
       rememberAnchor();
       window.history.pushState(null, '', hrefFor(target));
-    }} aria-current={view === target ? 'page' : undefined}>{label}</a>;
+    }} aria-label={label} title={label} aria-current={view === target ? 'page' : undefined}><span aria-hidden="true">{target === 'grid' ? <IconGrid /> : <IconStacked />}</span></a>;
 
   return <nav aria-label="Gallery layout" className="archive-view-switch slash-toggle">
     {link('grid', 'Gallery')}<span aria-hidden="true">/</span>{link('stacked', 'Journal')}

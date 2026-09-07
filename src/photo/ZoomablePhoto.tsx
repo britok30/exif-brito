@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
-import { Minus, Plus, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
+import { RiCollapseDiagonalLine, RiExpandDiagonalLine } from 'react-icons/ri';
 import { motion, useReducedMotion } from 'motion/react';
 import type { ViewerPhoto } from './viewer-data';
 import { FIT, constrainView, zoomView, swipeDirection, type ViewTransform } from './viewer-geometry';
@@ -109,9 +110,9 @@ export function ZoomablePhoto({ photo, preview, navigate }: { photo: ViewerPhoto
     </div>
     {failed && <div className="viewer-load-error" role="alert"><p>This photograph couldn’t load.</p><button type="button" className="studio-button" onClick={() => { setFailed(false); setAttempt(value => value + 1); }}>Try again</button></div>}
     <div className="viewer-zoom-controls" aria-label="Photograph zoom">
-      <button type="button" aria-label="Zoom out" disabled={view.scale <= 1} onClick={() => zoom(view.scale / 1.5, undefined, undefined, true)}><Minus size={17} /></button>
+      <button type="button" aria-label="Zoom out" disabled={view.scale <= 1} onClick={() => zoom(view.scale / 1.5, undefined, undefined, true)}><RiCollapseDiagonalLine size={18} aria-hidden="true" /></button>
       <button type="button" aria-label="Reset zoom" onClick={() => update(FIT, true)}><RotateCcw size={13} /><span>{Math.round(view.scale * 100)}%</span></button>
-      <button type="button" aria-label="Zoom in" disabled={view.scale >= 4} onClick={() => zoom(view.scale * 1.5, undefined, undefined, true)}><Plus size={17} /></button>
+      <button type="button" aria-label="Zoom in" disabled={view.scale >= 4} onClick={() => zoom(view.scale * 1.5, undefined, undefined, true)}><RiExpandDiagonalLine size={18} aria-hidden="true" /></button>
     </div>
   </div>;
 }

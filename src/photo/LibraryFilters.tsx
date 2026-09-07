@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { Search } from 'lucide-react';
+import IconSearch from '@/components/icons/IconSearch';
 import { SelectField } from '@/components/ui/select';
 
 const VISIBILITY: Array<{ value: string; label: string }> = [
@@ -34,7 +34,7 @@ export function LibraryFilters({ q, visibility, location, locations }: { q: stri
   if (location && !locations.includes(location)) destinations.push({ value: location, label: location });
 
   return <form action="/admin/photos" onSubmit={submit} className="archive-toolbar library-filters" role="search" aria-label="Filter the library">
-    <label className="library-search"><Search size={13} strokeWidth={1.5} aria-hidden="true" />
+    <label className="library-search"><span aria-hidden="true"><IconSearch width={24} /></span>
       <input name="q" type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search place, title or date" aria-label="Search photographs" />
       {search.get('view') && <input type="hidden" name="view" value={search.get('view') ?? ''} />}
     </label>

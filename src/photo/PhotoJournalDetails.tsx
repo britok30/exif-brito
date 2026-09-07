@@ -7,6 +7,9 @@ import { labelForFujifilmSimulation, type FujifilmRecipe } from '@/exif/fujifilm
 import { formatAppleLensText, isLensApple } from '@/platforms/apple';
 import { shortPhotoLocation } from './location';
 import { formatExposureTime } from './format';
+import { RiExpandDiagonalLine } from 'react-icons/ri';
+import { SharePhotoButton } from './SharePhotoButton';
+import { usePhotoViewer } from './PhotoViewerProvider';
 
 const formatExposure = (photo: Photo) =>
   [
@@ -29,6 +32,7 @@ const formatCamera = (photo: Photo) =>
   [photo.make, photo.model].filter(Boolean).join(' ') || undefined;
 
 export function PhotoJournalDetails({ photo }: { photo: Photo }) {
+  const open = usePhotoViewer();
   const camera = formatCamera(photo);
   const lens = formatLens(photo);
   const exposure = formatExposure(photo);
@@ -87,20 +91,20 @@ export function PhotoJournalDetails({ photo }: { photo: Photo }) {
           </div>
         )}
 
+      <div className="journal-photo-actions">
+        <button type="button" className="photo-action-button" aria-label="Enlarge photograph" title="Enlarge photograph" onClick={event => open?.(photo.id, event)}><RiExpandDiagonalLine size={18} aria-hidden="true" /></button>
+        {!photo.hidden && <SharePhotoButton id={photo.id} title={photo.title || shortPhotoLocation(photo) || 'Photograph by Brito'} />}
+      </div>
     </div>
   );
 }
 
 function SpecRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline gap-3 text-sm">
+    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] items-baseline gap-x-6 gap-y-1 text-sm">
       <dt className="gallery-label whitespace-nowrap">
         {label}
       </dt>
-      <span
-        aria-hidden
-        className="mb-[3px] flex-1 border-b border-dotted border-foreground"
-      />
       <dd className="min-w-0 text-right font-light text-foreground [overflow-wrap:anywhere]">{value}</dd>
     </div>
   );
