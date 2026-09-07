@@ -1,5 +1,5 @@
 import { db, photos, type Photo } from '@/db';
-import { desc, eq, or, isNull, getTableColumns, sql } from 'drizzle-orm';
+import { count, desc, eq, or, isNull, getTableColumns, sql } from 'drizzle-orm';
 import { revalidateTag, unstable_cache, updateTag } from 'next/cache';
 
 /** Every cached photo list carries this tag; mutations expire it. */
@@ -9,10 +9,18 @@ export const PHOTOS_TAG = 'photos';
 // carry blur data far too large to ship for every tile, so it stays in the database.
 export const MAX_INLINE_BLUR_LENGTH = 2000;
 
-const galleryColumns = {
+/**
+ * Rows for the gallery and studio lists. Colour analysis is never read by a
+ * list, and blur placeholders only matter near the top of a page, so they
+ * are kept for the first chunk alone; every other row leaves them out.
+ */
+const galleryColumns = (withBlur: boolean) => ({
   ...getTableColumns(photos),
-  blurData: sql<string | null>`case when length(${photos.blurData}) <= ${MAX_INLINE_BLUR_LENGTH} then ${photos.blurData} end`,
-};
+  blurData: withBlur
+    ? sql<string | null>`case when length(${photos.blurData}) <= ${MAX_INLINE_BLUR_LENGTH} then ${photos.blurData} end`
+    : sql<string | null>`null::text`,
+  colorData: sql<unknown>`null::jsonb`,
+});
 
 const publicOnly = or(eq(photos.hidden, false), isNull(photos.hidden));
 const newestFirst = [desc(photos.takenAt), desc(photos.id)];
@@ -25,10 +33,31 @@ const reviveDates = (row: Photo): Photo => ({
   createdAt: row.createdAt ? new Date(row.createdAt) : null,
 });
 
-const listPublicPhotos = unstable_cache(
-  async (): Promise<Photo[]> => db.select(galleryColumns).from(photos).where(publicOnly).orderBy(...newestFirst),
-  ['photos', 'public'], { tags: [PHOTOS_TAG] },
+/**
+ * Next caches at most 2 MB per entry, and a list of thousands of photographs
+ * is larger than that. Each list is stored as chunks of a few hundred rows,
+ * keyed by scope and index; every chunk carries the photos tag, so a change
+ * expires them together and they are rebuilt in parallel on the next visit.
+ */
+type Scope = 'public';
+const CHUNK = 300;
+const scopeWhere = (scope: Scope) => scope === 'public' ? publicOnly : undefined;
+
+const countPhotos = unstable_cache(
+  async (scope: Scope) => Number((await db.select({ total: count() }).from(photos).where(scopeWhere(scope)))[0]?.total ?? 0),
+  ['photos', 'count'], { tags: [PHOTOS_TAG] },
 );
+const listChunk = unstable_cache(
+  async (scope: Scope, index: number): Promise<Photo[]> => db.select(galleryColumns(index === 0)).from(photos)
+    .where(scopeWhere(scope)).orderBy(...newestFirst).limit(CHUNK).offset(index * CHUNK),
+  ['photos', 'chunk'], { tags: [PHOTOS_TAG] },
+);
+async function listPhotos(scope: Scope): Promise<Photo[]> {
+  const total = await countPhotos(scope);
+  const chunks = await Promise.all(Array.from({ length: Math.ceil(total / CHUNK) }, (_, index) => listChunk(scope, index)));
+  return chunks.flat().map(reviveDates);
+}
+
 const listIndex = unstable_cache(
   async () => db.select({
     id: photos.id, title: photos.title, locationName: photos.locationName, tags: photos.tags,
@@ -40,7 +69,7 @@ const listIndex = unstable_cache(
 
 /** Public photographs, newest first, with oversized blur placeholders left out. Cached until a photograph changes. */
 export async function getPhotos(limit?: number): Promise<Photo[]> {
-  const rows = (await listPublicPhotos()).map(reviveDates);
+  const rows = await listPhotos('public');
   return limit ? rows.slice(0, limit) : rows;
 }
 
@@ -48,7 +77,7 @@ export async function getPhotos(limit?: number): Promise<Photo[]> {
 export async function getLibrary(): Promise<Photo[]> {
   // Studio should reflect in-progress imports. A large private library can also
   // exceed the data cache's per-entry size, unlike the curated public gallery.
-  return db.select(galleryColumns).from(photos).orderBy(...newestFirst);
+  return db.select(galleryColumns(false)).from(photos).orderBy(...newestFirst);
 }
 
 export type PhotoIndexEntry = Awaited<ReturnType<typeof listIndex>>[number];
