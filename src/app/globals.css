@@ -192,6 +192,8 @@ a, button { touch-action: manipulation; }
 .archive-photo-link:hover h3 { text-decoration:underline; text-underline-offset:4px; }
 .archive-photo-place { margin-top:2px; font-size:12px; color:var(--fg-2); }
 .archive-photo-admin { display:flex; justify-content:flex-end; margin-top:8px; }
+.archive-more { min-height:44px; margin-top:24px; font-size:12px; color:var(--fg-2); }
+.archive-more button { text-decoration:underline; text-underline-offset:4px; color:var(--fg); }
 .archive-empty { min-height:45vh; padding:100px 0; font-size:13px; }
 .archive-empty h2 { font-size:28px; margin-bottom:24px; font-weight:300; }
 .archive-footer { display:flex; justify-content:space-between; gap:24px; padding:32px 48px; font-size:11px; }

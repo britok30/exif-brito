@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { GalleryHeader } from '@/components/gallery-header';
 import { StudioIntro } from '@/components/studio-intro';
-import { withImageSources } from '@/photo/url';
+import { galleryPhotos } from '@/photo/gallery-photo';
 import { getLibrary } from '@/photo/query';
 import { LibrarySelection } from '@/photo/LibrarySelection';
 import { PhotoCollection } from '@/photo/PhotoCollection';
@@ -20,7 +20,7 @@ export async function PhotoLibraryPage({ params, visibility }: { params: Library
   if (!isOwner(await auth())) redirect(`/sign-in?callbackUrl=${encodeURIComponent(path)}`);
   const library = await getLibrary();
   const selection = selectLibraryPage(library, { ...params, visibility });
-  const entries = withImageSources(selection.entries);
+  const entries = galleryPhotos(selection.entries, Infinity);
   const hidden = library.filter(photo => photo.hidden).length;
   const pageHref = (page: number) => libraryHref(visibility, { ...params, page: String(page) });
   return <PhotoViewerProvider photos={entries.map(viewerPhoto)}><main id="main" tabIndex={-1} className="archive-page">

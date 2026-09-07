@@ -11,8 +11,11 @@ import { InstagramIcon } from '@/components/icons/instagram-icon';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { auth } from '@/auth';
 import { getPhotos } from '@/photo/query';
-import { withImageSources } from '@/photo/url';
+import { galleryPhotos } from '@/photo/gallery-photo';
 import { PhotoCollection } from '@/photo/PhotoCollection';
+
+/** Tiles rendered on the server; the rest arrive in batches as the reader scrolls. */
+const INITIAL_TILES = 96;
 import { PhotoViewerProvider } from '@/photo/PhotoViewerProvider';
 import { viewerPhoto } from '@/photo/viewer-data';
 import { PhotoFacets } from '@/photo/PhotoFacets';
@@ -35,12 +38,19 @@ export default async function HomePage({ searchParams }: PageProps) {
   const isAdmin = isOwner(session);
   const allPhotos = await getPhotos();
   const facets = buildPhotoFacets(allPhotos);
-  const photos = withImageSources(applyPhotoFilter(allPhotos, filter));
+  const photos = applyPhotoFilter(allPhotos, filter);
   const years = new Map<string, typeof photos>();
   for (const photo of photos) {
     const year = photo.takenAtNaive.slice(0, 4);
     years.set(year, [...(years.get(year) ?? []), photo]);
   }
+  // Only the first screens are serialised; each year's remainder streams in on demand.
+  let budget = INITIAL_TILES;
+  const sections = Array.from(years, ([year, entries]) => {
+    const initial = galleryPhotos(entries.slice(0, budget));
+    budget = Math.max(0, budget - initial.length);
+    return { year, total: entries.length, initial };
+  });
   const filtered = Object.values(filter).some(Boolean);
 
   return (
@@ -70,13 +80,13 @@ export default async function HomePage({ searchParams }: PageProps) {
           {filtered && <ClearPhotoSelection className="mb-6 inline-block text-xs underline underline-offset-4">Clear selection</ClearPhotoSelection>}
         </FilterPanel>
 
-        {photos.length > 0 ? Array.from(years, ([year, entries], index) => (
+        {photos.length > 0 ? sections.map(({ year, total, initial }, index) => (
           <section key={year} aria-labelledby={`year-${year}`} className="archive-year">
             <Settle><Reveal><header className="archive-year-heading">
               <h2 id={`year-${year}`}>{year}</h2>
-              <p>{entries.length}<span>{entries.length === 1 ? 'photograph' : 'photographs'}</span></p>
+              <p>{total}<span>{total === 1 ? 'photograph' : 'photographs'}</span></p>
             </header></Reveal></Settle>
-            <PhotoCollection photos={entries} isAdmin={isAdmin} priority={index === 0} />
+            <PhotoCollection photos={initial} isAdmin={isAdmin} priority={index === 0} more={initial.length < total ? { year, total, filter } : undefined} />
           </section>
         )) : <div className="archive-empty">
           <h2>{allPhotos.length ? 'No photographs in this selection.' : 'The first photograph begins here.'}</h2>

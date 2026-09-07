@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { memo, useRef, type CSSProperties } from 'react';
 import { AnimatePresence, motion, useInView, useReducedMotion } from 'motion/react';
-import type { Photo } from '@/db';
+import type { GalleryPhoto } from './gallery-photo';
 import { LibrarySelectPhoto } from './LibrarySelection';
 import { DeletePhotoButton } from './DeletePhotoButton';
 import { PhotoJournalDetails } from './PhotoJournalDetails';
@@ -16,7 +16,7 @@ import { useJournalView } from './journal-view';
 import { useImageReveal } from './image-reveal';
 
 interface PhotoTileProps {
-  photo: Photo;
+  photo: GalleryPhoto;
   imageSrc: string;
   priority?: boolean;
   isAdmin?: boolean;
@@ -72,7 +72,7 @@ export const PhotoTile = memo(function PhotoTile({ photo, imageSrc, priority, is
 });
 
 /** Mounted only for nearby tiles, so a layout switch re-renders dozens of these rather than hundreds. */
-function JournalDetails({ photo, reduceMotion }: { photo: Photo; reduceMotion: boolean }) {
+function JournalDetails({ photo, reduceMotion }: { photo: GalleryPhoto; reduceMotion: boolean }) {
   const journal = useJournalView();
   return <AnimatePresence initial={false} mode="popLayout">
     {/* Details appear only after the photographs have settled, and vanish the moment the grid returns. */}

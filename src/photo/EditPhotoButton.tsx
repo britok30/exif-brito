@@ -12,7 +12,7 @@ import { LocationInput } from './LocationInput';
 import { shortPhotoLocation } from './location';
 import { PhotoImage } from './PhotoImage';
 
-export function EditPhotoButton({ photo, previewUrl }: { photo: Photo; previewUrl?: string }) {
+export function EditPhotoButton({ photo, previewUrl }: { photo: Pick<Photo, 'id' | 'title' | 'caption' | 'locationName' | 'tags' | 'hidden' | 'thumbnailUrl' | 'url'>; previewUrl?: string }) {
   const router = useRouter();
   const initial = () => ({ title: photo.title || '', caption: photo.caption || '', locationName: photo.locationName || '', tags: (photo.tags || []).join(', '), hidden: !!photo.hidden });
   const [values, setValues] = useState(initial);

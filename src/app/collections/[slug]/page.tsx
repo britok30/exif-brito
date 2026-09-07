@@ -9,7 +9,7 @@ import { Reveal } from '@/components/motion/reveal';
 import { PhotoCollection } from '@/photo/PhotoCollection';
 import { PhotoViewerProvider } from '@/photo/PhotoViewerProvider';
 import { viewerPhoto } from '@/photo/viewer-data';
-import { withImageSources } from '@/photo/url';
+import { galleryPhotos } from '@/photo/gallery-photo';
 import { ViewSwitcher } from '@/photo/ViewSwitcher';
 export const dynamic = 'force-dynamic';
 const findCollection = cache(getCollection);
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: Props) {
 export default async function CollectionPage({ params }: Props) {
   const collection = await findCollection((await params).slug);
   if (!collection) notFound();
-  const entries = withImageSources(collection.photos);
+  const entries = galleryPhotos(collection.photos);
   return <PhotoViewerProvider photos={entries.map(viewerPhoto)}><main id="main" tabIndex={-1} className="archive-page"><GalleryHeader />
     <Reveal className="gallery-intro series-intro" delay={0.08}><div><Link href="/collections" className="gallery-label">Collections</Link><h1>{collection.title}</h1></div>
       {collection.description && <p className="series-description">{collection.description}</p>}</Reveal>

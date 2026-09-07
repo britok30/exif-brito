@@ -1,6 +1,6 @@
 'use client';
 
-import type { Photo } from '@/db';
+import type { GalleryPhoto } from './gallery-photo';
 import { PhotoMark } from '@/components/icons/photo-mark';
 import { RecipeDialog } from './RecipeDialog';
 import { labelForFujifilmSimulation, type FujifilmRecipe } from '@/exif/fujifilm';
@@ -11,7 +11,7 @@ import { RiExpandDiagonalLine } from 'react-icons/ri';
 import { SharePhotoButton } from './SharePhotoButton';
 import { usePhotoViewer } from './PhotoViewerProvider';
 
-const formatExposure = (photo: Photo) =>
+const formatExposure = (photo: GalleryPhoto) =>
   [
     photo.focalLength && `${photo.focalLength}mm`,
     photo.fNumber && `ƒ/${photo.fNumber}`,
@@ -21,17 +21,17 @@ const formatExposure = (photo: Photo) =>
     .filter(Boolean)
     .join(' · ');
 
-const formatLens = (photo: Photo) => {
+const formatLens = (photo: GalleryPhoto) => {
   if (!photo.lensModel) return photo.lensMake ?? undefined;
   return isLensApple(photo.lensModel)
     ? formatAppleLensText(photo.lensModel)
     : photo.lensModel;
 };
 
-const formatCamera = (photo: Photo) =>
+const formatCamera = (photo: GalleryPhoto) =>
   [photo.make, photo.model].filter(Boolean).join(' ') || undefined;
 
-export function PhotoJournalDetails({ photo }: { photo: Photo }) {
+export function PhotoJournalDetails({ photo }: { photo: GalleryPhoto }) {
   const open = usePhotoViewer();
   const camera = formatCamera(photo);
   const lens = formatLens(photo);
