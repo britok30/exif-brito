@@ -8,7 +8,7 @@ vi.mock('drizzle-orm', () => ({ inArray: mocks.inArray, eq: mocks.eq, and: mocks
 import { GET, POST } from './route';
 const post = (body: unknown) => POST(new Request('http://localhost/api/photos/clear-unpublished', { method: 'POST', body: JSON.stringify(body) }));
 beforeEach(() => {
-  vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: { id: 'admin' } });
+  vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: { id: 'admin', email: 'owner@example.com' } });
   mocks.remove.mockReturnValue({ where: mocks.where }); mocks.where.mockReturnValue({ returning: mocks.returning });
   mocks.returning.mockResolvedValue([{ id: 'abcdefgh' }]);
   mocks.inArray.mockReturnValue('snapshot'); mocks.eq.mockReturnValue('unpublished'); mocks.and.mockReturnValue('both');

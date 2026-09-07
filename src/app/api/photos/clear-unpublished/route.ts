@@ -1,17 +1,19 @@
-import { auth } from '@/auth';
+import { authorizeStudio } from '@/security/authorize';
 import { db, photos } from '@/db';
 import { and, eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { revalidatePhotos } from '@/photo/query';
 
 export async function GET() {
-  if (!(await auth())?.user) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
+  const denied = await authorizeStudio();
+  if (denied) return denied;
   const rows = await db.select({ id: photos.id }).from(photos).where(eq(photos.hidden, true));
   return Response.json({ ids: rows.map(photo => photo.id) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(request: Request) {
-  if (!(await auth())?.user) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
+  const denied = await authorizeStudio(request);
+  if (denied) return denied;
   const body = await request.json().catch(() => null);
   if (body?.confirmation !== 'CLEAR' || !Array.isArray(body.ids) || !body.ids.length || body.ids.length > 20000 ||
     body.ids.some((id: unknown) => typeof id !== 'string' || !/^[a-z0-9]{8}$/i.test(id))) {

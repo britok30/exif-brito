@@ -1,10 +1,11 @@
+import { authorizeStudio } from '@/security/authorize';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { auth } from '@/auth';
 import { readReview, reviewDirectory, reviewOriginal } from '@/review/local';
 export const runtime = 'nodejs';
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await auth())?.user) return Response.json({ error: 'Please sign in to review photographs.' }, { status: 401 });
+  const denied = await authorizeStudio(request);
+  if (denied) return denied;
   const { id } = await params;
   if (!/^[a-f0-9]{20}$/.test(id)) return new Response(null, { status: 404 });
   const review = await readReview(); const item = review?.items.find(item => item.id === id);

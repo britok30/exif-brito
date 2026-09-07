@@ -1,3 +1,4 @@
+vi.mock('@/auth', () => ({ auth: vi.fn(async () => ({ user: { email: 'owner@example.com' } })) }));
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('@/platforms/google-maps', () => ({

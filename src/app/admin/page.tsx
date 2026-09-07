@@ -1,3 +1,4 @@
+import { isOwner } from '@/security/owner';
 import Link from 'next/link';
 import Image from 'next/image';
 import { imagePath } from '@/photo/url';
@@ -14,7 +15,7 @@ import { StudioIntro } from '@/components/studio-intro';
 export const metadata = { title: 'Studio' };
 
 export default async function StudioDashboard() {
-  if (!(await auth())?.user) redirect('/sign-in?callbackUrl=%2Fadmin');
+  if (!isOwner(await auth())) redirect('/sign-in?callbackUrl=%2Fadmin');
   const [library, [collections]] = await Promise.all([getLibrary(), db.select({ total: count() }).from(albums)]);
   const unpublished = library.filter(photo => photo.hidden);
   const destinations = new Map<string, { total: number; photo: (typeof unpublished)[number] }>();

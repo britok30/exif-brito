@@ -1,3 +1,4 @@
+import { authorizeStudio } from '@/security/authorize';
 import { syncDestinationCollections } from '@/collections/sync';
 import { normalizeLocationName, knownLocationFromTags } from '@/photo/location';
 import { NextRequest, NextResponse } from 'next/server';
@@ -37,6 +38,8 @@ const thumbnailKeyFor = (originalKey: string) => {
 };
 
 export async function POST(req: NextRequest) {
+  const denied = await authorizeStudio(req);
+  if (denied) return denied;
   const body = await req.json().catch(() => null) as RequestBody | null;
   if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   const { key } = body;

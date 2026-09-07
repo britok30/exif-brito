@@ -1,14 +1,15 @@
+import { authorizeStudio } from '@/security/authorize';
 import { syncDestinationCollections } from '@/collections/sync';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { revalidatePhotos } from '@/photo/query';
 import { eq } from 'drizzle-orm';
-import { auth } from '@/auth';
 import { db, photos } from '@/db';
 import { parsePhotoEdits } from '@/photo/edit';
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await auth())?.user) return NextResponse.json({ error: 'Please sign in again before saving.' }, { status: 401 });
+  const denied = await authorizeStudio(request);
+  if (denied) return denied;
   const { id } = await params;
   if (!/^[a-z0-9]{8}$/i.test(id)) return NextResponse.json({ error: 'Photograph not found.' }, { status: 404 });
   const edits = parsePhotoEdits(await request.json().catch(() => null));

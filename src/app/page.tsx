@@ -1,3 +1,4 @@
+import { isOwner } from '@/security/owner';
 import { SearchButton } from '@/search/SearchProvider';
 import { publicMetadata } from '@/seo/metadata';
 import { SITE_TITLE, SITE_DESCRIPTION } from '@/seo/site';
@@ -31,7 +32,7 @@ interface PageProps {
 export default async function HomePage({ searchParams }: PageProps) {
   const [search, session] = await Promise.all([searchParams, auth()]);
   const filter = parsePhotoFilter(search);
-  const isAdmin = Boolean(session?.user);
+  const isAdmin = isOwner(session);
   const allPhotos = await getPhotos();
   const facets = buildPhotoFacets(allPhotos);
   const photos = withImageSources(applyPhotoFilter(allPhotos, filter));

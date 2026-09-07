@@ -15,7 +15,9 @@ const PAGES = [
 export function StudioNav() {
   const pathname = usePathname();
   if (!pathname.startsWith('/admin')) return null;
-  const current = (href: string) => href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
+  // The library's sibling routes (unpublished, published) all belong to Photographs.
+  const current = (href: string) => href === '/admin' ? pathname === '/admin'
+    : href === '/admin/photos' ? /^\/admin\/(photos|unpublished|published)/.test(pathname) : pathname.startsWith(href);
   return <nav className="slash-toggle studio-nav" aria-label="Studio">
     {PAGES.flatMap((page, index) => [
       index > 0 && <span key={`${page.href}-slash`} aria-hidden="true">/</span>,

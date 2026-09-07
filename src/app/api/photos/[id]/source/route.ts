@@ -1,10 +1,11 @@
-import { auth } from '@/auth';
+import { authorizeStudio } from '@/security/authorize';
 import { getPhotoById } from '@/photo/query';
 import { rawSourceKey } from '@/photo/raw-source';
 import { isS3Url, s3SignedUrl } from '@/storage/s3';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await auth())?.user) return new Response('Please sign in.', { status: 401 });
+  const denied = await authorizeStudio(_request);
+  if (denied) return denied;
   const { id } = await params;
   if (!/^[a-z0-9]{8}$/i.test(id)) return new Response('Not found', { status: 404 });
   const photo = await getPhotoById(id);

@@ -3,7 +3,7 @@ const { auth } = vi.hoisted(() => ({ auth: vi.fn() }));
 vi.mock('@/auth', () => ({ auth }));
 import { GET } from './route';
 const query = (input: string) => GET(new Request(`http://localhost/api/places?input=${encodeURIComponent(input)}`));
-beforeEach(() => { auth.mockResolvedValue({ user: { id: 'admin' } }); vi.stubEnv('GOOGLE_PLACES_API_KEY', ''); vi.stubEnv('GOOGLE_MAPS_API_KEY', 'test-key'); vi.stubGlobal('fetch', vi.fn()); });
+beforeEach(() => { auth.mockResolvedValue({ user: { id: 'admin', email: 'owner@example.com' } }); vi.stubEnv('GOOGLE_PLACES_API_KEY', ''); vi.stubEnv('GOOGLE_MAPS_API_KEY', 'test-key'); vi.stubGlobal('fetch', vi.fn()); });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.clearAllMocks(); });
 it('requires sign-in before making a provider request', async () => {
   auth.mockResolvedValue(null); expect((await query('Kyoto')).status).toBe(401); expect(fetch).not.toHaveBeenCalled();

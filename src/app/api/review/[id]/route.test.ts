@@ -6,7 +6,7 @@ vi.mock('@/review/local', () => ({ readReview: mocks.review, reviewOriginal: moc
 import { GET } from './route';
 const id = '0123456789abcdef0123';
 const get = (value = id, original = false) => GET(new Request(`http://localhost/api/review/${value}${original ? '?original=1' : ''}`), { params: Promise.resolve({ id: value }) });
-beforeEach(() => { vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: {} }); mocks.review.mockResolvedValue({ items: [{ id }] }); mocks.read.mockResolvedValue(Buffer.from('image')); mocks.original.mockResolvedValue('/card/photo.JPG'); });
+beforeEach(() => { vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: { email: 'owner@example.com' } }); mocks.review.mockResolvedValue({ items: [{ id }] }); mocks.read.mockResolvedValue(Buffer.from('image')); mocks.original.mockResolvedValue('/card/photo.JPG'); });
 it('never reads local files for unauthenticated visitors', async () => {
   mocks.auth.mockResolvedValue(null); expect((await get()).status).toBe(401); expect(mocks.review).not.toHaveBeenCalled(); expect(mocks.read).not.toHaveBeenCalled();
 });

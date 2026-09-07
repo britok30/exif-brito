@@ -1,5 +1,7 @@
 'use server';
 
+import { isOwner } from '@/security/owner';
+
 import { revalidatePath } from 'next/cache';
 import { revalidatePhotos } from './query';
 import { eq } from 'drizzle-orm';
@@ -21,7 +23,7 @@ export async function deletePhotoAction(
   id: string,
 ): Promise<DeletePhotoResult> {
   const session = await auth();
-  if (!session?.user) {
+  if (!isOwner(session)) {
     return { ok: false, error: 'unauthorized' };
   }
 

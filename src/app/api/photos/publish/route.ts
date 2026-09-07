@@ -1,13 +1,14 @@
+import { authorizeStudio } from '@/security/authorize';
 import { syncDestinationCollections } from '@/collections/sync';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { and, eq, inArray } from 'drizzle-orm';
-import { auth } from '@/auth';
 import { db, photos } from '@/db';
 import { revalidatePhotos } from '@/photo/query';
 
 export async function POST(request: Request) {
-  if (!(await auth())?.user) return NextResponse.json({ error: 'Please sign in again before publishing.' }, { status: 401 });
+  const denied = await authorizeStudio(request);
+  if (denied) return denied;
   const body = await request.json().catch(() => null);
   if (!Array.isArray(body?.ids) || !body.ids.length || body.ids.length > 5000 ||
     body.ids.some((id: unknown) => typeof id !== 'string' || !/^[a-z0-9]{8}$/i.test(id))) {

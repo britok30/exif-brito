@@ -1,8 +1,9 @@
+import { authorizeStudio } from '@/security/authorize';
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
 
 export async function GET(request: Request) {
-  if (!(await auth())?.user) return NextResponse.json({ error: 'Please sign in to search locations.' }, { status: 401 });
+  const denied = await authorizeStudio(request);
+  if (denied) return denied;
   const input = new URL(request.url).searchParams.get('input')?.trim() || '';
   if (input.length < 2 || input.length > 255) return NextResponse.json({ suggestions: [] });
   const key = process.env.GOOGLE_PLACES_API_KEY || process.env.GOOGLE_MAPS_API_KEY;

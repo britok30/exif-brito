@@ -16,7 +16,7 @@ import { albums } from '@/db';
 const id = '55652a9f-08bf-4977-9590-dc877d061d98';
 const value = { title: 'Kyoto', slug: 'kyoto', description: '', photoIds: ['ezuihkxn', 'AJPSPIpE'] };
 const put = (body: unknown = value) => PUT(new Request('http://localhost/api/collections/' + id, { method: 'PUT', body: JSON.stringify(body) }), { params: Promise.resolve({ id }) });
-beforeEach(() => { vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: {} }); mocks.found.mockResolvedValue(value.photoIds.map(id => ({ id }))); mocks.batch.mockResolvedValue([]); });
+beforeEach(() => { vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: { email: 'owner@example.com' } }); mocks.found.mockResolvedValue(value.photoIds.map(id => ({ id }))); mocks.batch.mockResolvedValue([]); });
 it('requires authentication for writes and removal', async () => {
   mocks.auth.mockResolvedValue(null);
   expect((await put()).status).toBe(401);

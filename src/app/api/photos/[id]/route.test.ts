@@ -9,7 +9,7 @@ import { PATCH } from './route';
 const details = { title: '  Kyoto  ', caption: '  A quiet morning.  ', locationName: '', tags: [' Japan ', 'Japan', ''], hidden: false };
 const patch = (body: unknown) => PATCH(new Request('http://localhost/api/photos/ezuihkxn', { method: 'PATCH', body: JSON.stringify(body) }), { params: Promise.resolve({ id: 'ezuihkxn' }) });
 beforeEach(() => {
-  vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: { id: 'admin' } });
+  vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: { id: 'admin', email: 'owner@example.com' } });
   mocks.update.mockReturnValue({ set: mocks.set }); mocks.set.mockReturnValue({ where: mocks.where });
   mocks.where.mockReturnValue({ returning: mocks.returning }); mocks.returning.mockResolvedValue([{ id: 'ezuihkxn' }]);
 });
@@ -19,6 +19,7 @@ it('rejects unauthenticated writes before accessing the database', async () => {
 it('updates only editorial fields and refreshes the public and private views', async () => {
   expect((await patch(details)).status).toBe(200);
   expect(mocks.set).toHaveBeenCalledWith({ title: 'Kyoto', caption: 'A quiet morning.', locationName: null, tags: ['Japan'], hidden: false, updatedAt: expect.any(Date) });
+  expect(mocks.revalidate).toHaveBeenCalledWith('/admin', 'layout');
   expect(mocks.revalidate.mock.calls.map(call => call[0])).toEqual(['/', '/p/ezuihkxn', '/admin']);
 });
 it('allows clearing fields and hiding and restoring a photograph', async () => {

@@ -1,3 +1,4 @@
+import { authorizeStudio } from '@/security/authorize';
 import { NextRequest, NextResponse } from 'next/server';
 import { MAX_UPLOAD_BYTES, UPLOAD_TYPES } from '@/photo/upload-policy';
 import { S3_BASE_URL, generateStorageId, s3SignedUrl } from '@/storage/s3';
@@ -11,6 +12,8 @@ const ALLOWED_TYPES = new Set([
 ]);
 
 export async function POST(req: NextRequest) {
+  const denied = await authorizeStudio(req);
+  if (denied) return denied;
   const { filename, contentType, size } = (await req.json().catch(() => null)) ?? {} as {
     filename?: string;
     contentType?: string;

@@ -1,6 +1,6 @@
+import { authorizeStudio } from '@/security/authorize';
 import { revalidatePath } from 'next/cache';
 import { eq, inArray } from 'drizzle-orm';
-import { auth } from '@/auth';
 import { db, albums, albumPhoto, photos } from '@/db';
 import { parseCollection } from '@/collections/validation';
 import { revalidatePhotos } from '@/photo/query';
@@ -8,7 +8,8 @@ import { revalidatePhotos } from '@/photo/query';
 const validId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 function refresh() { revalidatePhotos(); revalidatePath('/collections', 'layout'); revalidatePath('/admin/collections'); }
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await auth())?.user) return Response.json({ error: 'Please sign in again before saving.' }, { status: 401 });
+  const denied = await authorizeStudio(request);
+  if (denied) return denied;
   const { id } = await params;
   const value = parseCollection(await request.json().catch(() => null));
   if (!validId(id) || !value) return Response.json({ error: 'Add a title, a valid URL name, and at least one photograph.' }, { status: 400 });
@@ -31,7 +32,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await auth())?.user) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
+  const denied = await authorizeStudio(_request);
+  if (denied) return denied;
   const { id } = await params;
   if (!validId(id)) return Response.json({ error: 'Collection not found.' }, { status: 404 });
   try {

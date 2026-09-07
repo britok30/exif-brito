@@ -1,3 +1,4 @@
+import { isOwner } from '@/security/owner';
 import { photoMetadata, photoLabel } from '@/seo/metadata';
 import { absoluteUrl, serializeJsonLd } from '@/seo/site';
 import { imagePath } from '@/photo/url';
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PhotoPage({ params }: Props) {
   const [photo, session] = await Promise.all([findPhoto((await params).id), auth()]);
-  if (!photo || (photo.hidden && !session?.user)) notFound();
+  if (!photo || (photo.hidden && !isOwner(session))) notFound();
   const [archive, [image]] = await Promise.all([getPhotoIndex(), withDisplayUrls([photo])]);
   const index = archive.findIndex(item => item.id === photo.id);
   const previous = index >= 0 ? archive[index - 1] : undefined;
@@ -57,7 +58,7 @@ export default async function PhotoPage({ params }: Props) {
       <GalleryHeader />
       <article className="photo-content">
         {!photo.hidden && <script type="application/ld+json" dangerouslySetInnerHTML={{__html:serializeJsonLd({'@context':'https://schema.org','@type':'ImageObject',name:photoLabel(photo),description:photo.caption || photo.semanticDescription || undefined,url:absoluteUrl(`/p/${photo.id}`),contentUrl:absoluteUrl(imagePath(photo.thumbnailUrl || photo.url)),thumbnailUrl:absoluteUrl(imagePath(photo.thumbnailUrl || photo.url)),width:photo.width || undefined,height:photo.height || undefined,dateCreated:photo.takenAtNaive.slice(0,10),creator:{'@type':'Person',name:'Brito',url:absoluteUrl('/')},creditText:'Brito'})}} />}
-        {session?.user && <div className="photo-owner-controls"><Link href="/admin/photos">Photo library</Link>{photo.hidden && <span>Hidden</span>}{rawSourceKey(photo.url) && <a href={`/api/photos/${photo.id}/source`}>Download RAW</a>}<EditPhotoButton photo={photo} previewUrl={image.displayUrl} /></div>}
+        {isOwner(session) && <div className="photo-owner-controls"><Link href="/admin/photos">Photo library</Link>{photo.hidden && <span>Hidden</span>}{rawSourceKey(photo.url) && <a href={`/api/photos/${photo.id}/source`}>Download RAW</a>}<EditPhotoButton photo={photo} previewUrl={image.displayUrl} /></div>}
         <Reveal y={12}><PhotoFigure>
           <PhotoViewer id={photo.id} imageKey={photo.thumbnailUrl || photo.url} src={image.imageSrc} title={title}
             alt={photo.semanticDescription || photo.caption || `${title} — photograph by Brito`}

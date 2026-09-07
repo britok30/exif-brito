@@ -1,9 +1,12 @@
+import { authorizeStudio } from '@/security/authorize';
 import { NextRequest, NextResponse } from 'next/server';
 import { s3Delete } from '@/storage/s3';
 import { isUploadKey } from '@/photo/upload-policy';
 import { findUploadedPhoto } from '@/photo/upload-record';
 
 export async function POST(req: NextRequest) {
+  const denied = await authorizeStudio(req);
+  if (denied) return denied;
   const { key } = (await req.json().catch(() => null)) ?? {};
 
   if (!key) {

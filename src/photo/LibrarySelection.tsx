@@ -49,7 +49,7 @@ export function LibrarySelection({ hiddenIds, children }: { hiddenIds: string[];
     finally { setPending(false); }
   }
   return <SelectionContext.Provider value={{ selected, toggle, pending: pending || !ready }}>
-    <motion.div className="library-selection-bar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: reduceMotion ? 0 : 0.4 }}>
+    {hiddenIds.length > 0 && <motion.div className="library-selection-bar" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: reduceMotion ? 0 : 0.4 }}>
       <div><p aria-live="polite">{selected.size ? `${selected.size} selected` : 'Choose your photographs.'}</p>
         <span>{selected.size ? 'Your selection stays with you across pages and destinations.' : 'Select the ones you love, then publish when you’re ready.'}</span></div>
       <div className="library-selection-actions">
@@ -58,7 +58,7 @@ export function LibrarySelection({ hiddenIds, children }: { hiddenIds: string[];
       </div>
       {message && <p className="library-selection-message" role="status">{message}</p>}
       {error && <p className="library-selection-message" role="alert">{error}</p>}
-    </motion.div>
+    </motion.div>}
     {children}
   </SelectionContext.Provider>;
 }

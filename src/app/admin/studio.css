@@ -16,9 +16,16 @@
 .studio-destination-count { flex:none; font-variant-numeric:tabular-nums; }
 .studio-confirm-input { width:100%; min-height:44px; margin-top:8px; padding:10px 12px; border:1px solid var(--fg); border-radius:0; background:var(--bg); color:var(--fg); font:inherit; font-size:12px; }
 .studio-confirm-label { display:block; margin-top:20px; font-size:11px; color:var(--fg-2); }
-.library-page-jump { display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; }
-.library-page-jump input[type=number] { width:64px; min-height:44px; border:1px solid var(--fg); background:transparent; color:var(--fg); text-align:center; font:inherit; font-size:12px; }
+/* Pagination is a toolbar band: previous on the left, the page in the middle (type a number and press Enter), next on the right. */
+.library-pagination { margin-top:48px; }
+.library-pagination > a { justify-self:start; min-height:44px; display:inline-flex; align-items:center; }
+.library-pagination > a:last-child, .library-pagination > .is-quiet:last-child { justify-self:end; }
+.library-pagination > a:hover { text-decoration:underline; text-underline-offset:4px; }
+.library-pagination .is-quiet { color:var(--fg-3); }
+.library-page-jump { display:flex; align-items:center; justify-content:center; gap:8px; color:var(--fg-2); }
+.library-page-jump input[type=number] { width:56px; min-height:36px; padding:0 4px; border:0; border-bottom:1px solid var(--fg); border-radius:0; background:transparent; color:var(--fg); text-align:center; font:inherit; font-size:12px; font-variant-numeric:tabular-nums; -moz-appearance:textfield; }
+.library-page-jump input::-webkit-outer-spin-button, .library-page-jump input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 @media(max-width:900px) { .studio-nav { display:none; } }
 @media(max-width:700px) { .studio-figures { grid-template-columns:repeat(2,minmax(0,1fr)); } .studio-destinations { grid-template-columns:1fr; } .studio-dashboard .archive-toolbar { grid-template-columns:1fr; gap:10px; } }
-@media(max-width:540px) { .library-pagination { flex-wrap:wrap; } .library-page-jump { order:-1; width:100%; } }
+@media(max-width:540px) { .library-pagination { grid-template-columns:1fr 1fr; } .library-page-jump { grid-column:1 / -1; } }
 .studio-dashboard .archive-toolbar > :last-child { justify-self:end; }

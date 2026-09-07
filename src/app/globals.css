@@ -596,8 +596,6 @@ main:focus { outline:none; }
 .upload-bulk-fields .field-select-trigger { min-height:38px; border:1px solid var(--fg); padding:0 12px; color:var(--fg); text-decoration:none; }
 .upload-bulk-fields .field-select-trigger:hover { text-decoration:none; }
 @media(max-width:700px) { .library-filters { grid-template-columns:1fr; gap:4px; } .library-filters > .slash-toggle { justify-self:start; } .library-destination { justify-content:space-between; } }
-.library-pagination { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:48px; padding-top:24px; border-top:1px solid var(--fg); font-size:12px; }
-.library-pagination > span { min-width:80px; }
 @media(max-width:700px) { .studio-intro { flex-direction:column; align-items:flex-start; gap:24px; } .studio-intro > div { width:100%; } }
 
 /* The selection bar is a toolbar band: status on the left, a grey hint, actions on the right. */

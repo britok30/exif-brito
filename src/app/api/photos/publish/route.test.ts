@@ -10,7 +10,7 @@ vi.mock('drizzle-orm', () => ({ inArray: mocks.inArray, eq: mocks.eq, and: mocks
 import { POST } from './route';
 const post = (body: unknown) => POST(new Request('http://localhost/api/photos/publish', { method: 'POST', body: JSON.stringify(body) }));
 beforeEach(() => {
-  vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: { id: 'admin' } });
+  vi.clearAllMocks(); mocks.auth.mockResolvedValue({ user: { id: 'admin', email: 'owner@example.com' } });
   mocks.update.mockReturnValue({ set: mocks.set }); mocks.set.mockReturnValue({ where: mocks.where });
   mocks.where.mockReturnValue({ returning: mocks.returning }); mocks.returning.mockResolvedValue([{ id: 'abcdefgh' }]);
   mocks.inArray.mockReturnValue('selected-ids'); mocks.eq.mockReturnValue('hidden-only'); mocks.and.mockReturnValue('both-conditions');
