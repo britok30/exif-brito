@@ -39,7 +39,7 @@ it('standardizes London labels while preserving other Londons and full addresses
 });
 
 it('standardizes the reviewed towns and Google province labels without displaying SA as a city', () => {
-  for (const [input,expected] of [['Split','Split, Croatia'],['Dubrovnik','Dubrovnik, Croatia'],['Grindelwald','Grindelwald, Switzerland'],['Positano, SA, Italy','Positano, Italy'],['Amalfi, SA, Italy','Amalfi, Italy']]) {
+  for (const [input,expected] of [['Cefalù, PA, Italy','Cefalù, Italy'],['cefalu','Cefalù, Italy'],['Split','Split, Croatia'],['Dubrovnik','Dubrovnik, Croatia'],['Grindelwald','Grindelwald, Switzerland'],['Positano, SA, Italy','Positano, Italy'],['Amalfi, SA, Italy','Amalfi, Italy']]) {
     expect(normalizeLocationName(input)).toBe(expected);
     expect(shortPhotoLocation({locationName:input,tags:[]})).toBe(expected);
   }

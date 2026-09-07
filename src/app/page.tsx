@@ -1,3 +1,5 @@
+import { publicMetadata } from '@/seo/metadata';
+import { SITE_TITLE, SITE_DESCRIPTION } from '@/seo/site';
 import Link from 'next/link';
 import { Reveal } from '@/components/motion/reveal';
 import { Settle } from '@/components/motion/settle';
@@ -16,6 +18,10 @@ import { ViewSwitcher, ClearPhotoSelection } from '@/photo/ViewSwitcher';
 import { applyPhotoFilter, buildPhotoFacets, parsePhotoFilter } from '@/photo/filters';
 
 export const dynamic = 'force-dynamic';
+export async function generateMetadata() {
+  const cover = (await getPhotos(1))[0];
+  return publicMetadata({title:SITE_TITLE,description:SITE_DESCRIPTION,path:'/',photoId:cover?.id});
+}
 
 interface PageProps {
   searchParams: Promise<Record<string, string | undefined>>;

@@ -1,3 +1,6 @@
+import { photoMetadata, photoLabel } from '@/seo/metadata';
+import { absoluteUrl, serializeJsonLd } from '@/seo/site';
+import { imagePath } from '@/photo/url';
 import { auth } from '@/auth';
 import { EditPhotoButton } from '@/photo/EditPhotoButton';
 import { PhotoFigure } from '@/photo/PhotoFigure';
@@ -25,8 +28,7 @@ const findPhoto = cache(getPhotoById);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const photo = await findPhoto((await params).id);
-  if (!photo || photo.hidden) return { title: 'Photograph not found' };
-  return { title: photo.title || photo.locationName || photo.tags?.[0] || 'Untitled', description: photo.caption || photo.semanticDescription || 'A photograph by Brito.' };
+  return photoMetadata(photo);
 }
 
 export default async function PhotoPage({ params }: Props) {
@@ -54,9 +56,10 @@ export default async function PhotoPage({ params }: Props) {
     <PhotoViewerProvider photos={(photo.hidden ? [photo] : archive).map(viewerPhoto)}><main id="main" tabIndex={-1} className="flex-1">
       <GalleryHeader />
       <article className="photo-content">
+        {!photo.hidden && <script type="application/ld+json" dangerouslySetInnerHTML={{__html:serializeJsonLd({'@context':'https://schema.org','@type':'ImageObject',name:photoLabel(photo),description:photo.caption || photo.semanticDescription || undefined,url:absoluteUrl(`/p/${photo.id}`),contentUrl:absoluteUrl(imagePath(photo.url)),thumbnailUrl:absoluteUrl(imagePath(photo.thumbnailUrl || photo.url)),width:photo.width || undefined,height:photo.height || undefined,dateCreated:photo.takenAtNaive.slice(0,10),creator:{'@type':'Person',name:'Brito',url:absoluteUrl('/')},creditText:'Brito'})}} />}
         {session?.user && <div className="photo-owner-controls"><Link href="/admin/photos">Photo library</Link>{photo.hidden && <span>Hidden</span>}{rawSourceKey(photo.url) && <a href={`/api/photos/${photo.id}/source`}>Download RAW</a>}<EditPhotoButton photo={photo} previewUrl={image.displayUrl} /></div>}
         <Reveal y={12}><PhotoFigure>
-          <PhotoViewer id={photo.id} imageKey={photo.thumbnailUrl || photo.url} src={image.displayUrl} title={title}
+          <PhotoViewer id={photo.id} imageKey={photo.thumbnailUrl || photo.url} src={image.imageSrc} title={title}
             alt={photo.semanticDescription || photo.caption || `${title} — photograph by Brito`}
             width={photo.width ?? undefined} height={photo.height ?? undefined} />
           <figcaption className="mt-4 flex justify-between gap-4 gallery-label">

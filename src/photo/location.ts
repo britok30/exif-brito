@@ -2,6 +2,8 @@ import type { Photo } from '@/db';
 
 // Explicit collection vocabulary; unknown city names are never assigned a country.
 const knownLocations: Record<string, string> = {
+  cefalu: 'Cefalù, Italy', 'cefalù': 'Cefalù, Italy', 'cefalu, italy': 'Cefalù, Italy',
+  'cefalù, pa, italy': 'Cefalù, Italy', 'cefalu, pa, italy': 'Cefalù, Italy',
   split: 'Split, Croatia', dubrovnik: 'Dubrovnik, Croatia',
   grindelwald: 'Grindelwald, Switzerland',
   positano: 'Positano, Italy', 'positano, sa, italy': 'Positano, Italy',

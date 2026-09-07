@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type MouseEvent } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode, type MouseEvent } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react';
@@ -47,7 +47,8 @@ export function PhotoViewerProvider({ photos, children }: { photos: ViewerPhoto[
     }
   }, [index, photos]);
 
-  function open(id: string, event: MouseEvent<HTMLElement>) {
+  // Stable across renders, so the hundreds of memoised tiles that consume it are not re-rendered when the viewer opens.
+  const open = useCallback((id: string, event: MouseEvent<HTMLElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0 || !photos.some(photo => photo.id === id)) return;
     event.preventDefault();
     if (active.current || closing.current) return;
@@ -59,7 +60,7 @@ export function PhotoViewerProvider({ photos, children }: { photos: ViewerPhoto[
     window.history.pushState({ ...window.history.state, britoViewer: { returnUrl } }, '', `#photo=${encodeURIComponent(id)}`);
     active.current = id;
     setActiveId(id);
-  }
+  }, [photos]);
   function close() {
     if (!active.current || closing.current) return;
     closing.current = true;

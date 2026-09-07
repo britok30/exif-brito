@@ -1,3 +1,5 @@
+import { cache } from 'react';
+import { publicMetadata } from '@/seo/metadata';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getCollection } from '@/collections/query';
@@ -10,13 +12,15 @@ import { viewerPhoto } from '@/photo/viewer-data';
 import { withImageSources } from '@/photo/url';
 import { ViewSwitcher } from '@/photo/ViewSwitcher';
 export const dynamic = 'force-dynamic';
+const findCollection = cache(getCollection);
 type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props) {
-  const collection = await getCollection((await params).slug);
-  return { title: collection?.title || 'Collection not found', description: collection?.description || undefined };
+  const collection = await findCollection((await params).slug);
+  if (!collection) return { title:'Collection not found', robots:{index:false,follow:false} };
+  return publicMetadata({ title:`${collection.title} Photography`, description:collection.description || `Explore ${collection.photos.length} photographs from ${collection.title} in Brito’s photographic journal. Places, people, and passing moments.`, path:`/collections/${collection.slug}`,photoId:collection.photos[0]?.id });
 }
 export default async function CollectionPage({ params }: Props) {
-  const collection = await getCollection((await params).slug);
+  const collection = await findCollection((await params).slug);
   if (!collection) notFound();
   const entries = withImageSources(collection.photos);
   return <PhotoViewerProvider photos={entries.map(viewerPhoto)}><main id="main" tabIndex={-1} className="archive-page"><GalleryHeader />
