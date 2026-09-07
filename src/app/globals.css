@@ -157,7 +157,7 @@ a, button { touch-action: manipulation; }
 .gallery-nav-links { display:flex; align-items:center; gap:32px; font-size:12px; }
 /* Paired choices read as one phrase: the current side in ink, the other in grey. */
 .slash-toggle { display:inline-flex; align-items:center; gap:.4em; font-size:12px; white-space:nowrap; }
-.slash-toggle > a, .slash-toggle > button { color:var(--fg-2); transition:color .4s var(--theme-ease); }
+.slash-toggle > a, .slash-toggle > button { color:var(--fg-2); padding:12px 0; margin:-12px 0; transition:color .4s var(--theme-ease); }
 .slash-toggle > a:hover, .slash-toggle > button:hover { color:var(--fg); text-decoration:none; }
 .slash-toggle > [aria-current], .slash-toggle > [aria-pressed="true"] { color:var(--fg); }
 .slash-toggle > span { color:var(--fg-3); }

@@ -75,7 +75,7 @@ export default async function PhotoPage({ params }: Props) {
             <h1 className="photo-title">{title}</h1>
             {photo.caption && <p className="mt-6 max-w-xl whitespace-pre-line text-sm leading-relaxed text-foreground">{photo.caption}</p>}
             {photo.tags && photo.tags.length > 0 && <ul aria-label="Subjects and places" className="mt-8 flex flex-wrap gap-4">
-              {photo.tags.map(tag => <li key={tag}><Link className="text-sm text-foreground underline decoration-foreground underline-offset-4" href={`/?tag=${encodeURIComponent(tag)}#archive`}>{tag}</Link></li>)}
+              {photo.tags.map(tag => <li key={tag}><Link className="inline-block py-2 -my-2 text-sm text-foreground underline decoration-foreground underline-offset-4" href={`/?tag=${encodeURIComponent(tag)}#archive`}>{tag}</Link></li>)}
             </ul>}
           </div>
           {specs.length > 0 && <section aria-label="Capture details">
@@ -83,7 +83,7 @@ export default async function PhotoPage({ params }: Props) {
             <dl>{specs.map(([label, value]) => <div key={label} className="flex justify-between gap-6 border-t border-foreground py-3">
               <dt className="gallery-label shrink-0">{label}</dt><dd className="text-right text-sm">{value}</dd>
             </div>)}</dl>
-            {photo.film && recipe?.whiteBalance && <div className="mt-6"><RecipeDialog film={photo.film} recipe={recipe} make={photo.make ?? undefined} /></div>}
+            {photo.film && recipe?.whiteBalance && <div className="mt-6"><RecipeDialog film={photo.film} recipe={recipe} make={photo.make ?? undefined} trigger={<span className="text-sm underline decoration-foreground underline-offset-4">View film recipe</span>} /></div>}
           </section>}
         </Reveal>
         <nav aria-label="Browse photographs" className="photo-pagination">
