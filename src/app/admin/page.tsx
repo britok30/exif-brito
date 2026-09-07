@@ -9,6 +9,7 @@ import { db, albums } from '@/db';
 import { getLibrary } from '@/photo/query';
 import { shortPhotoLocation } from '@/photo/location';
 import { ClearUnpublished } from '@/photo/ClearUnpublished';
+import { RefreshLibrary } from '@/photo/RefreshLibrary';
 import { GalleryHeader } from '@/components/gallery-header';
 import { StudioIntro } from '@/components/studio-intro';
 
@@ -45,7 +46,7 @@ export default async function StudioDashboard() {
       <section aria-labelledby="unpublished-heading">
         <header className="archive-toolbar"><p id="unpublished-heading">Unpublished by destination</p>
           <span className="archive-total">{unpublished.length.toLocaleString()} photographs / {destinations.size} {destinations.size === 1 ? 'destination' : 'destinations'}</span>
-          <Link href="/admin/unpublished" className="studio-button">Browse all unpublished</Link></header>
+          <div className="studio-toolbar-actions"><RefreshLibrary /><Link href="/admin/unpublished" className="studio-button">Browse all unpublished</Link></div></header>
         {unpublished.length ? <ul className="studio-destinations">
           {ordered.map(([location, { total, photo }]) => <li key={location}>
             <Link href={`/admin/unpublished${location ? `?${new URLSearchParams({ location })}` : ''}`}>

@@ -29,3 +29,4 @@
 @media(max-width:700px) { .studio-figures { grid-template-columns:repeat(2,minmax(0,1fr)); } .studio-destinations { grid-template-columns:1fr; } .studio-dashboard .archive-toolbar { grid-template-columns:1fr; gap:10px; } }
 @media(max-width:540px) { .library-pagination { grid-template-columns:1fr 1fr; } .library-page-jump { grid-column:1 / -1; } }
 .studio-dashboard .archive-toolbar > :last-child { justify-self:end; }
+.studio-toolbar-actions { display:flex; align-items:center; gap:20px; }

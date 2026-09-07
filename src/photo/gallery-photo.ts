@@ -1,6 +1,7 @@
 import type { Photo } from '@/db';
 import { imagePath } from './url';
 import { MAX_INLINE_BLUR_LENGTH } from './query';
+import type { FujifilmRecipe } from '@/exif/fujifilm';
 
 /**
  * What a gallery tile needs and nothing more. A full photo record is about
@@ -10,7 +11,7 @@ import { MAX_INLINE_BLUR_LENGTH } from './query';
 export type GalleryPhoto = Pick<Photo,
   'id' | 'title' | 'caption' | 'locationName' | 'tags' | 'takenAtNaive' | 'width' | 'height' | 'aspectRatio' | 'blurData'
   | 'semanticDescription' | 'hidden' | 'url' | 'thumbnailUrl' | 'make' | 'model' | 'lensMake' | 'lensModel'
-  | 'focalLength' | 'fNumber' | 'exposureTime' | 'iso' | 'film' | 'recipeData'> & { imageSrc: string };
+  | 'focalLength' | 'fNumber' | 'exposureTime' | 'iso' | 'film'> & { imageSrc: string; hasRecipe: boolean };
 
 /** How many tiles from the top of a page keep an inline blur placeholder. */
 export const BLUR_TILES = 60;
@@ -23,7 +24,9 @@ export function toGalleryPhoto(photo: Photo, blur: boolean): GalleryPhoto {
     semanticDescription: photo.semanticDescription, hidden: photo.hidden, url: photo.url, thumbnailUrl: photo.thumbnailUrl,
     make: photo.make, model: photo.model, lensMake: photo.lensMake, lensModel: photo.lensModel,
     focalLength: photo.focalLength, fNumber: photo.fNumber, exposureTime: photo.exposureTime, iso: photo.iso,
-    film: photo.film, recipeData: photo.recipeData,
+    film: photo.film,
+    // The recipe itself is fetched when its dialog opens; a tile only needs to know one exists.
+    hasRecipe: Boolean((photo.recipeData as FujifilmRecipe | null)?.whiteBalance),
     imageSrc: imagePath(photo.thumbnailUrl || photo.url),
   };
 }

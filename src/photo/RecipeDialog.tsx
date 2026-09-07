@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import {
   Dialog,
@@ -101,15 +101,30 @@ const buildSpecs = (recipe: FujifilmRecipe): Array<{ heading: string; rows: Spec
 
 interface RecipeDialogProps {
   film: string;
-  recipe: FujifilmRecipe;
+  /** Pass the recipe when it is already at hand (the photograph page)... */
+  recipe?: FujifilmRecipe;
+  /** ...or the photograph's id, and it is fetched the first time the dialog opens (gallery tiles). */
+  photoId?: string;
   make?: string;
   trigger?: React.ReactNode;
 }
 
-export function RecipeDialog({ film, recipe, make, trigger }: RecipeDialogProps) {
+export function RecipeDialog({ film, recipe: given, photoId, make, trigger }: RecipeDialogProps) {
   const [open, setOpen] = useState(false);
   const reduceMotion = useReducedMotion();
-  const sections = buildSpecs(recipe);
+  const [fetched, setFetched] = useState<FujifilmRecipe | null>(null);
+  const [failed, setFailed] = useState(false);
+  const recipe = given ?? fetched;
+  useEffect(() => {
+    if (!open || recipe || !photoId) return;
+    let cancelled = false;
+    setFailed(false);
+    fetch(`/api/recipe/${photoId}`).then(response => { if (!response.ok) throw new Error(); return response.json() as Promise<{ recipe: FujifilmRecipe | null }>; })
+      .then(data => { if (!cancelled) { if (data.recipe?.whiteBalance) setFetched(data.recipe); else setFailed(true); } })
+      .catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; };
+  }, [open, recipe, photoId]);
+  const sections = recipe ? buildSpecs(recipe) : [];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -156,6 +171,7 @@ export function RecipeDialog({ film, recipe, make, trigger }: RecipeDialogProps)
             </DialogTitle>
           </DialogHeader>
 
+          {!recipe && <p className="gallery-label" role="status">{failed ? 'The recipe couldn’t load. Close and try again.' : 'Loading recipe…'}</p>}
           <div className="grid grid-cols-1 gap-x-10 gap-y-7 sm:grid-cols-2">
             {sections.map(section => (
               <section key={section.heading} className="space-y-3">

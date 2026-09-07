@@ -1,18 +1,18 @@
 import { expect, it, vi } from 'vitest';
 import { PgDialect } from 'drizzle-orm/pg-core';
-const mocks = vi.hoisted(() => ({ select: vi.fn(), distinct: vi.fn(), conditions: [] as unknown[] }));
+const mocks = vi.hoisted(() => ({ photos: vi.fn(), distinct: vi.fn(), conditions: [] as unknown[] }));
 vi.mock('next/cache', () => ({ unstable_cache: (fn: unknown) => fn, revalidateTag: vi.fn(), updateTag: vi.fn() }));
-vi.mock('@/db', async () => ({ ...await import('@/db/schema'), db: { select: mocks.select, selectDistinct: mocks.distinct } }));
+vi.mock('@/photo/query', () => ({ getPhotos: mocks.photos, PHOTOS_TAG: 'photos' }));
+vi.mock('@/db', async () => ({ ...await import('@/db/schema'), db: { selectDistinct: mocks.distinct } }));
 import { GET } from './route';
-function query(rows: unknown[], ordered = false) {
+function query(rows: unknown[]) {
   const chain: Record<string, unknown> = {};
   for (const method of ['from', 'innerJoin']) chain[method] = () => chain;
-  chain.where = (condition: unknown) => { mocks.conditions.push(condition); return ordered ? chain : Promise.resolve(rows); };
-  chain.orderBy = () => Promise.resolve(rows);
+  chain.where = (condition: unknown) => { mocks.conditions.push(condition); return Promise.resolve(rows); };
   return chain;
 }
-it('filters both search queries to published content and returns navigation data without storage fields', async () => {
-  mocks.select.mockReturnValueOnce(query([{ id: 'abcdefgh', title: null, caption: 'Along the river', locationName: 'London, UK', tags: ['travel'], takenAtNaive: '2025-11-10T12:00:00', url: 'private-original', thumbnailUrl: 'private-preview' }], true));
+it('indexes the cached public list and only published collections, without storage fields', async () => {
+  mocks.photos.mockResolvedValueOnce([{ id: 'abcdefgh', title: null, caption: 'Along the river', locationName: 'London, UK', tags: ['travel'], takenAtNaive: '2025-11-10T12:00:00', url: 'private-original', thumbnailUrl: 'private-preview' }]);
   mocks.distinct.mockReturnValueOnce(query([{ slug: 'london', title: 'London' }]));
   const response = await GET();
   const entries = await response.json();

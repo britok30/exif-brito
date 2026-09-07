@@ -3,7 +3,7 @@
 import type { GalleryPhoto } from './gallery-photo';
 import { PhotoMark } from '@/components/icons/photo-mark';
 import { RecipeDialog } from './RecipeDialog';
-import { labelForFujifilmSimulation, type FujifilmRecipe } from '@/exif/fujifilm';
+import { labelForFujifilmSimulation } from '@/exif/fujifilm';
 import { formatAppleLensText, isLensApple } from '@/platforms/apple';
 import { shortPhotoLocation } from './location';
 import { formatExposureTime } from './format';
@@ -44,7 +44,6 @@ export function PhotoJournalDetails({ photo }: { photo: GalleryPhoto }) {
   const place = shortPhotoLocation(photo);
   if (place) specs.push({ label: 'Location', value: place });
 
-  const recipe = photo.recipeData as FujifilmRecipe | null;
   const filmLabel = photo.film
     ? labelForFujifilmSimulation(photo.film)
     : undefined;
@@ -59,10 +58,10 @@ export function PhotoJournalDetails({ photo }: { photo: GalleryPhoto }) {
 
         {(specs.length > 0 || photo.make || photo.film) && (
           <div className="mt-8 space-y-4">
-            {photo.film && recipe?.whiteBalance ? (
+            {photo.film && photo.hasRecipe ? (
               <RecipeDialog
                 film={photo.film}
-                recipe={recipe}
+                photoId={photo.id}
                 make={photo.make ?? undefined}
               />
             ) : (

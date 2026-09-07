@@ -39,18 +39,20 @@ const reviveDates = (row: Photo): Photo => ({
  * keyed by scope and index; every chunk carries the photos tag, so a change
  * expires them together and they are rebuilt in parallel on the next visit.
  */
-type Scope = 'public';
+type Scope = 'public' | 'library';
+/** Imports written straight to the database cannot expire the tag; the studio refreshes on its own after this long. */
+const LIBRARY_REFRESH_SECONDS = 300;
 const CHUNK = 300;
 const scopeWhere = (scope: Scope) => scope === 'public' ? publicOnly : undefined;
 
 const countPhotos = unstable_cache(
   async (scope: Scope) => Number((await db.select({ total: count() }).from(photos).where(scopeWhere(scope)))[0]?.total ?? 0),
-  ['photos', 'count'], { tags: [PHOTOS_TAG] },
+  ['photos', 'count'], { tags: [PHOTOS_TAG], revalidate: LIBRARY_REFRESH_SECONDS },
 );
 const listChunk = unstable_cache(
   async (scope: Scope, index: number): Promise<Photo[]> => db.select(galleryColumns(index === 0)).from(photos)
     .where(scopeWhere(scope)).orderBy(...newestFirst).limit(CHUNK).offset(index * CHUNK),
-  ['photos', 'chunk'], { tags: [PHOTOS_TAG] },
+  ['photos', 'chunk'], { tags: [PHOTOS_TAG], revalidate: LIBRARY_REFRESH_SECONDS },
 );
 async function listPhotos(scope: Scope): Promise<Photo[]> {
   const total = await countPhotos(scope);
@@ -75,9 +77,9 @@ export async function getPhotos(limit?: number): Promise<Photo[]> {
 
 /** Every photograph including hidden ones, for the private studio. */
 export async function getLibrary(): Promise<Photo[]> {
-  // Studio should reflect in-progress imports. A large private library can also
-  // exceed the data cache's per-entry size, unlike the curated public gallery.
-  return db.select(galleryColumns(false)).from(photos).orderBy(...newestFirst);
+  // Cached like the public list; the studio's Refresh action or the periodic
+  // refresh picks up imports written straight to the database.
+  return listPhotos('library');
 }
 
 export type PhotoIndexEntry = Awaited<ReturnType<typeof listIndex>>[number];
