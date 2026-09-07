@@ -3,9 +3,10 @@ import { eq, inArray } from 'drizzle-orm';
 import { auth } from '@/auth';
 import { db, albums, albumPhoto, photos } from '@/db';
 import { parseCollection } from '@/collections/validation';
+import { revalidatePhotos } from '@/photo/query';
 
 const validId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-function refresh() { revalidatePath('/collections', 'layout'); revalidatePath('/admin/collections'); }
+function refresh() { revalidatePhotos(); revalidatePath('/collections', 'layout'); revalidatePath('/admin/collections'); }
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await auth())?.user) return Response.json({ error: 'Please sign in again before saving.' }, { status: 401 });
   const { id } = await params;

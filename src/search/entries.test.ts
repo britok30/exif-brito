@@ -7,9 +7,11 @@ it('indexes dates, descriptions, equipment and film without needing a title', ()
 });
 
 it('accepts only internal photograph or collection navigation', () => {
-  const entry = { id: 'photo:abcdefgh', name: 'London', subtitle: '', keywords: '', path: '/p/abcdefgh', section: 'Photographs' };
+  const entry = { id: 'photo:abcdefgh', name: 'London', subtitle: '', keywords: '', path: '/p/abcdefgh', section: 'Photographs', image: '/api/image/photos/a.jpg' };
   expect(isSearchEntry(entry)).toBe(true);
   expect(isSearchEntry({ ...entry, section: 'Collections', path: '/collections/london' })).toBe(true);
   for (const path of ['https://example.com', '//example.com', 'javascript:alert(1)', '/admin/photos', '/api/image/photos/a.jpg']) expect(isSearchEntry({ ...entry, path })).toBe(false);
   expect(isSearchEntry({ ...entry, keywords: undefined })).toBe(false);
+  expect(isSearchEntry({ ...entry, image: null })).toBe(true);
+  for (const image of [undefined, 'https://bucket.example/photos/a.jpg', '/photos/a.jpg']) expect(isSearchEntry({ ...entry, image })).toBe(false);
 });

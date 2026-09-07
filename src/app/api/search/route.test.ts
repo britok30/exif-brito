@@ -1,6 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { PgDialect } from 'drizzle-orm/pg-core';
 const mocks = vi.hoisted(() => ({ select: vi.fn(), distinct: vi.fn(), conditions: [] as unknown[] }));
+vi.mock('next/cache', () => ({ unstable_cache: (fn: unknown) => fn, revalidateTag: vi.fn(), updateTag: vi.fn() }));
 vi.mock('@/db', async () => ({ ...await import('@/db/schema'), db: { select: mocks.select, selectDistinct: mocks.distinct } }));
 import { GET } from './route';
 function query(rows: unknown[], ordered = false) {
@@ -19,6 +20,8 @@ it('filters both search queries to published content and returns navigation data
   expect(entries.map((e: { path: string }) => e.path)).toEqual(['/collections/london', '/p/abcdefgh']);
   expect(entries[1].keywords).toContain('Along the river');
   expect(entries[1].keywords).toContain('travel');
+  expect(entries[1].subtitle).toBe('London, UK / November 10, 2025');
+  expect(entries[1].image).toBeNull();
   expect(JSON.stringify(entries)).not.toContain('private-');
   for (const condition of mocks.conditions) {
     const sql = new PgDialect().sqlToQuery(condition as Parameters<PgDialect['sqlToQuery']>[0]);

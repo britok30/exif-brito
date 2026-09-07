@@ -21,7 +21,9 @@ export function searchKeywords(photo: SearchPhoto): string {
 export function isSearchEntry(value: unknown): value is SearchEntry {
   if (!value || typeof value !== 'object') return false;
   const entry = value as Record<string, unknown>;
+  const image = entry.image;
   return ['id', 'name', 'subtitle', 'keywords', 'path'].every(key => typeof entry[key] === 'string') &&
+    (image === null || (typeof image === 'string' && image.startsWith('/api/image/'))) &&
     ((entry.section === 'Photographs' && /^\/p\/[a-z0-9]{8}$/i.test(entry.path as string)) ||
      (entry.section === 'Collections' && /^\/collections\/[^/?#]+$/.test(entry.path as string)));
 }

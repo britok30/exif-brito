@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ auth: vi.fn(), batch: vi.fn(), found: vi.fn(), remove: vi.fn(), revalidate: vi.fn() }));
 vi.mock('@/auth', () => ({ auth: mocks.auth }));
-vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidate }));
+vi.mock('next/cache', () => ({ revalidatePath: mocks.revalidate, revalidateTag: vi.fn(), updateTag: vi.fn(), unstable_cache: (fn: unknown) => fn }));
 vi.mock('@/db', async () => {
   const schema = await import('@/db/schema');
   return { ...schema, db: {

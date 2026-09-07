@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
     localPatterns: [{ pathname: '/api/image/**', search: '' }],
     // Fewer, well-spaced candidates keep 300+ srcsets from bloating the page.
     deviceSizes: [640, 828, 1080, 1440, 1920, 2560],
-    imageSizes: [256, 384],
+    imageSizes: [96, 256, 384],
     qualities: [80],
     minimumCacheTTL: 60 * 60 * 24 * 365,
   },
