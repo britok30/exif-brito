@@ -12,7 +12,7 @@ import { LocationInput } from './LocationInput';
 import { shortPhotoLocation } from './location';
 import { PhotoImage } from './PhotoImage';
 
-export function EditPhotoButton({ photo, previewUrl }: { photo: Pick<Photo, 'id' | 'title' | 'caption' | 'locationName' | 'tags' | 'hidden' | 'thumbnailUrl' | 'url'>; previewUrl?: string }) {
+export function EditPhotoButton({ photo, previewUrl }: { photo: Pick<Photo, 'id' | 'title' | 'caption' | 'locationName' | 'tags' | 'hidden'>; previewUrl?: string }) {
   const router = useRouter();
   const initial = () => ({ title: photo.title || '', caption: photo.caption || '', locationName: photo.locationName || '', tags: (photo.tags || []).join(', '), hidden: !!photo.hidden });
   const [values, setValues] = useState(initial);
@@ -52,8 +52,8 @@ export function EditPhotoButton({ photo, previewUrl }: { photo: Pick<Photo, 'id'
       <DialogContent className="photo-editor max-[540px]:translate-x-0 max-[540px]:translate-y-0" showCloseButton={false}>
         <header className="photo-editor-header">
           {previewUrl && <div className="photo-editor-preview">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <PhotoImage imageKey={photo.thumbnailUrl || photo.url} src={previewUrl} alt="" />
+            { }
+            <PhotoImage imageKey={photo.id} src={previewUrl} alt="" />
           </div>}
           <div><p className="gallery-label">Private studio</p><DialogTitle className="photo-editor-title">Edit photograph.</DialogTitle>
             <DialogDescription className="mt-2 text-xs">Details for your gallery.</DialogDescription></div>

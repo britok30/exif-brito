@@ -9,10 +9,10 @@ export function photoLabel(photo: MetadataPhoto) {
 }
 export function publicMetadata({ title, description, path, photoId }: { title: string; description: string; path: string; photoId?: string }): Metadata {
   const fullTitle = title === SITE_TITLE ? title : `${title} — ${SITE_NAME}`;
-  const image = { url: absoluteUrl(photoId ? `/og/${photoId}?v=2` : '/og?v=2'), width:1200, height:630, alt:title };
+  const image = { url: absoluteUrl(photoId ? `/og/${photoId}?v=3` : '/og?v=3'), width:1200, height:630, alt:title };
   return {
     title: title === SITE_TITLE ? { absolute: title } : title, description,
-    alternates: { canonical: absoluteUrl(path) },
+    alternates: { canonical: absoluteUrl(path), types: { 'application/rss+xml': [{ url: absoluteUrl('/feed.xml'), title: SITE_TITLE }] } },
     openGraph: { type:'website', locale:'en_US', siteName:SITE_NAME, title:fullTitle, description, url:absoluteUrl(path), images:[image] },
     twitter: { card:'summary_large_image', title:fullTitle, description, creator:'@kelbrxto', images:[image] },
   };

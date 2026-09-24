@@ -2,6 +2,9 @@ vi.mock('@/auth', () => ({ auth: vi.fn(async () => ({ user: { email: 'owner@exam
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@/photo/upload-record', () => ({ findUploadedPhoto: vi.fn(async () => undefined) }));
+const rowDeletes = vi.hoisted(() => vi.fn(async () => undefined));
+vi.mock('@/db', async () => ({ ...await import('@/db/schema'), db: { delete: () => ({ where: rowDeletes }) } }));
+vi.mock('@/photo/query', () => ({ revalidatePhotos: vi.fn() }));
 
 const deleteMock = vi.fn(async () => undefined);
 
@@ -44,10 +47,11 @@ describe('POST /api/photos/discard', () => {
     expect(deleteMock).toHaveBeenCalledWith('photos/abc.jpg');
   });
 
-  it('returns 502 when S3 delete throws', async () => {
+  it('returns 502 when S3 delete throws, without echoing the storage error', async () => {
     deleteMock.mockRejectedValueOnce(new Error('boom'));
     const res = await post({ key: 'photos/abc.jpg' });
     expect(res.status).toBe(502);
+    expect((await res.json()).error).not.toContain('boom');
   });
 });
 
@@ -57,4 +61,12 @@ it('cannot discard an original that has already been published', async () => {
   deleteMock.mockClear();
   expect((await post({ key: 'photos/abc.jpg' })).status).toBe(409);
   expect(deleteMock).not.toHaveBeenCalled();
+});
+
+it('removes a photograph published while its original was being discarded', async () => {
+  const { findUploadedPhoto } = await import('@/photo/upload-record');
+  vi.mocked(findUploadedPhoto).mockResolvedValueOnce(undefined as never).mockResolvedValueOnce({ id: 'raced001' } as never);
+  rowDeletes.mockClear();
+  expect((await post({ key: 'photos/abc.jpg' })).status).toBe(200);
+  expect(rowDeletes).toHaveBeenCalledTimes(1);
 });

@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+ 
 // Adapted with permission from sambecker/exif-photo-blog
 // (src/components/icons/IconGrid.tsx).
 

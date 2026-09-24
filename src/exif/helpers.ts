@@ -14,12 +14,25 @@ export const getExifValue = (
 const isOffsetString = (value: unknown): value is string =>
   typeof value === 'string' && /^[+-]\d\d:\d\d$/.test(value);
 
+// The offset recorded with the capture time comes first; OffsetTime belongs to
+// the file's modification time and can differ after an edit on another continent.
+const OFFSET_KEYS = ['OffsetTimeOriginal', 'OffsetTimeDigitized', 'OffsetTime'] as const;
+
 export const getOffsetFromExif = (
   exif: ExifData,
   exifr: Record<string, unknown> | undefined,
-): string | undefined =>
-  (Object.values(exif.tags ?? {}).find(isOffsetString) ??
+): string | undefined => {
+  const tags = (exif.tags ?? {}) as Record<string, unknown>;
+  for (const key of OFFSET_KEYS) {
+    const value = tags[key] ?? exifr?.[key];
+    if (isOffsetString(value)) return value;
+  }
+  // Some makers store the offset under their own tag names.
+  return (Object.values(tags).find(isOffsetString) ??
     Object.values(exifr ?? {}).find(isOffsetString)) as string | undefined;
+};
+
+const pad = (value: number) => String(value).padStart(2, '0');
 
 export interface Dimensions {
   width?: number;
@@ -79,7 +92,12 @@ export const parseTakenAt = (
 
   let iso: string | undefined;
   if (dateTimeOriginal instanceof Date) {
-    iso = dateTimeOriginal.toISOString().replace(/\.\d{3}Z$/, '');
+    // exifr revives EXIF's zone-less timestamps as local time, so read them back
+    // with local getters; toISOString() would shift them by the server's offset.
+    const d = dateTimeOriginal;
+    if (!isNaN(d.getTime())) {
+      iso = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
   } else if (typeof dateTimeOriginal === 'number') {
     const d = new Date(dateTimeOriginal * (dateTimeOriginal < 1e12 ? 1000 : 1));
     if (!isNaN(d.getTime())) {

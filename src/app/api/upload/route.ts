@@ -3,13 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { MAX_UPLOAD_BYTES, UPLOAD_TYPES } from '@/photo/upload-policy';
 import { S3_BASE_URL, generateStorageId, s3SignedUrl } from '@/storage/s3';
 
-const ALLOWED_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/heic',
-  'image/heif',
-]);
+const ALLOWED_TYPES = new Set(Object.values(UPLOAD_TYPES));
 
 export async function POST(req: NextRequest) {
   const denied = await authorizeStudio(req);
@@ -34,7 +28,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (size !== undefined && (!Number.isFinite(size) || size <= 0 || size > MAX_UPLOAD_BYTES)) return NextResponse.json({ error: 'Choose a non-empty image up to 50 MB' }, { status: 400 });
+  // The size is checked again against storage before a photograph is processed.
+  if (typeof size !== 'number' || !Number.isFinite(size) || size <= 0 || size > MAX_UPLOAD_BYTES) return NextResponse.json({ error: 'Choose a non-empty image up to 50 MB' }, { status: 400 });
 
   if (!S3_BASE_URL) {
     return NextResponse.json(

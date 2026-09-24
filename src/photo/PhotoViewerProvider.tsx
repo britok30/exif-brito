@@ -6,14 +6,28 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, ArrowRight, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { ZoomablePhoto } from './ZoomablePhoto';
-import type { ViewerPhoto } from './viewer-data';
+import { isViewerPhoto, type ViewerPhoto } from './viewer-data';
 import { SharePhotoButton } from './SharePhotoButton';
 
-const ViewerContext = createContext<((id: string, event: MouseEvent<HTMLElement>) => void) | null>(null);
+type OpenViewer = (id: string, event: MouseEvent<HTMLElement>, photo?: ViewerPhoto) => void;
+const ViewerContext = createContext<OpenViewer | null>(null);
 export const usePhotoViewer = () => useContext(ViewerContext);
 const hashId = () => new URLSearchParams(window.location.hash.slice(1)).get('photo');
 
-export function PhotoViewerProvider({ photos, children }: { photos: ViewerPhoto[]; children: ReactNode }) {
+/**
+ * The full-screen viewer for a page of photographs. Its running order comes
+ * from `listUrl` once the page is idle (or the moment it is needed), so pages
+ * never serialise the whole archive; a tile opened before then passes its own
+ * entry and the viewer starts with that. `seed` covers pages with a known,
+ * small list, such as a private photograph.
+ */
+export function PhotoViewerProvider({ listUrl, seed, children }: { listUrl?: string | null; seed?: ViewerPhoto[]; children: ReactNode }) {
+  const [list, setList] = useState<ViewerPhoto[] | null>(listUrl ? null : seed ?? []);
+  const [pending, setPending] = useState<ViewerPhoto[]>(seed ?? []);
+  const photos = list ?? pending;
+  const photosRef = useRef(photos);
+  useEffect(() => { photosRef.current = photos; }, [photos]);
+  const loading = useRef<Promise<void> | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const active = useRef<string | null>(null);
   const closing = useRef(false);
@@ -26,6 +40,23 @@ export function PhotoViewerProvider({ photos, children }: { photos: ViewerPhoto[
   const selected = photos[index];
   if (selected) lastPhoto.current = selected;
   const photo = selected || lastPhoto.current;
+
+  const load = useCallback(() => {
+    if (!listUrl) return Promise.resolve();
+    loading.current ??= fetch(listUrl)
+      .then(response => { if (!response.ok) throw new Error('Viewer list unavailable'); return response.json() as Promise<unknown>; })
+      .then(data => { if (!Array.isArray(data) || !data.every(isViewerPhoto)) throw new Error('Invalid viewer list'); setList(data); })
+      // Forget a failure so the next open retries; the viewer keeps working with what it has.
+      .catch(() => { loading.current = null; });
+    return loading.current;
+  }, [listUrl]);
+
+  useEffect(() => {
+    if (!listUrl) return;
+    if (hashId()) { void load(); return; }
+    const idle = window.requestIdleCallback?.(() => void load(), { timeout: 5000 }) ?? window.setTimeout(() => void load(), 3000);
+    return () => { window.cancelIdleCallback?.(idle as number); window.clearTimeout(idle as number); };
+  }, [listUrl, load]);
 
   useEffect(() => {
     const restore = () => {
@@ -49,10 +80,15 @@ export function PhotoViewerProvider({ photos, children }: { photos: ViewerPhoto[
   }, [index, photos]);
 
   // Stable across renders, so the hundreds of memoised tiles that consume it are not re-rendered when the viewer opens.
-  const open = useCallback((id: string, event: MouseEvent<HTMLElement>) => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0 || !photos.some(photo => photo.id === id)) return;
+  const open = useCallback<OpenViewer>((id, event, entry) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    const known = photosRef.current.some(photo => photo.id === id);
+    // Without an entry for this photograph yet, the link simply opens its page.
+    if (!known && !entry) return;
     event.preventDefault();
     if (active.current || closing.current) return;
+    if (!known && entry) setPending(previous => [...previous.filter(photo => photo.id !== id), entry]);
+    void load();
     opener.current = event.currentTarget;
     origin.current = { x: window.scrollX, y: window.scrollY };
     const image = event.currentTarget.querySelector('img');
@@ -61,7 +97,7 @@ export function PhotoViewerProvider({ photos, children }: { photos: ViewerPhoto[
     window.history.pushState({ ...window.history.state, britoViewer: { returnUrl } }, '', `#photo=${encodeURIComponent(id)}`);
     active.current = id;
     setActiveId(id);
-  }, [photos]);
+  }, [load]);
   function close() {
     if (!active.current || closing.current) return;
     closing.current = true;
@@ -110,7 +146,7 @@ export function PhotoViewerProvider({ photos, children }: { photos: ViewerPhoto[
         </div>
         <footer className="viewer-navigation">
           <button type="button" disabled={index <= 0} onClick={() => navigate(-1)} aria-label="Previous photograph"><ArrowLeft size={20} strokeWidth={1.25} /><span>Previous</span></button>
-          <div><p aria-live="polite" aria-atomic="true">{index >= 0 ? index + 1 : photos.findIndex(p => p.id === photo.id) + 1} / {photos.length}</p>
+          <div><p aria-live="polite" aria-atomic="true">{list ? `${index >= 0 ? index + 1 : photos.findIndex(p => p.id === photo.id) + 1} / ${photos.length}` : '\u00a0'}</p>
             <Link href={`/p/${photo.id}`} className="viewer-details-link">Photo details</Link></div>
           <button type="button" disabled={index < 0 || index >= photos.length - 1} onClick={() => navigate(1)} aria-label="Next photograph"><span>Next</span><ArrowRight size={20} strokeWidth={1.25} /></button>
         </footer>

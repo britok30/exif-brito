@@ -3,8 +3,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
-  ListObjectsV2Command,
-  CopyObjectCommand,
+  HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { customAlphabet } from 'nanoid';
@@ -72,42 +71,19 @@ export const s3Put = async (
   return urlForKey(key);
 };
 
-export const s3Copy = async (
-  sourceKey: string,
-  destKey: string,
-): Promise<string> => {
-  await client().send(
-    new CopyObjectCommand({
-      Bucket: BUCKET,
-      CopySource: `${BUCKET}/${sourceKey}`,
-      Key: destKey,
-    }),
-  );
-  return urlForKey(destKey);
-};
-
 export const s3Delete = (key: string) =>
   client().send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
 
-export interface StorageObject {
-  key: string;
-  url: string;
-  size?: number;
-  uploadedAt?: Date;
-}
-
-export const s3List = async (prefix = ''): Promise<StorageObject[]> => {
-  const out = await client().send(
-    new ListObjectsV2Command({ Bucket: BUCKET, Prefix: prefix }),
-  );
-  return (
-    out.Contents?.map(({ Key, Size, LastModified }) => ({
-      key: Key ?? '',
-      url: urlForKey(Key ?? ''),
-      size: Size,
-      uploadedAt: LastModified,
-    })) ?? []
-  );
+/** Size of a stored object, read from its headers without downloading it; undefined when it does not exist. */
+export const s3Size = async (key: string): Promise<number | undefined> => {
+  try {
+    const head = await client().send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }));
+    return head.ContentLength;
+  } catch (error) {
+    const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+    if (status === 404 || (error as Error).name === 'NotFound') return undefined;
+    throw error;
+  }
 };
 
 export const s3SignedUrl = (

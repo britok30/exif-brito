@@ -14,22 +14,39 @@ import { getPhotos } from '@/photo/query';
 import { galleryPhotos } from '@/photo/gallery-photo';
 import { PhotoCollection } from '@/photo/PhotoCollection';
 
-/** Tiles rendered on the server; the rest arrive in batches as the reader scrolls. */
-const INITIAL_TILES = 96;
 import { PhotoViewerProvider } from '@/photo/PhotoViewerProvider';
-import { viewerPhoto } from '@/photo/viewer-data';
 import { PhotoFacets } from '@/photo/PhotoFacets';
 import { ViewSwitcher, ClearPhotoSelection } from '@/photo/ViewSwitcher';
-import { applyPhotoFilter, buildPhotoFacets, parsePhotoFilter } from '@/photo/filters';
+import { applyPhotoFilter, buildPhotoFacets, describePhotoFilter, filterSearchParams, isFiltered, parsePhotoFilter } from '@/photo/filters';
+
+/** Tiles rendered on the server; the rest arrive in batches as the reader scrolls. */
+const INITIAL_TILES = 96;
 
 export const dynamic = 'force-dynamic';
-export async function generateMetadata() {
-  const cover = (await getPhotos(1))[0];
-  return publicMetadata({title:SITE_TITLE,description:SITE_DESCRIPTION,path:'/',photoId:cover?.id});
-}
 
 interface PageProps {
   searchParams: Promise<Record<string, string | undefined>>;
+}
+
+/**
+ * A filtered gallery (one camera, film, lens, place, subject, focal length or
+ * year) is a page of its own: its own title, description, share image and
+ * canonical address, so it can be found and shared rather than folding into
+ * the home page.
+ */
+export async function generateMetadata({ searchParams }: PageProps) {
+  const filter = parsePhotoFilter(await searchParams);
+  const all = await getPhotos();
+  if (!isFiltered(filter)) return publicMetadata({ title: SITE_TITLE, description: SITE_DESCRIPTION, path: '/', photoId: all[0]?.id });
+  const photos = applyPhotoFilter(all, filter);
+  const label = describePhotoFilter(filter, all) ?? 'Selected';
+  const metadata = publicMetadata({
+    title: `${label} photographs`,
+    description: `${photos.length} ${photos.length === 1 ? 'photograph' : 'photographs'} in Brito’s photographic journal: ${label}.`,
+    path: `/?${filterSearchParams(filter)}`, photoId: photos[0]?.id,
+  });
+  // Empty selections are not worth indexing.
+  return photos.length ? metadata : { ...metadata, robots: { index: false, follow: true } };
 }
 
 export default async function HomePage({ searchParams }: PageProps) {
@@ -51,10 +68,11 @@ export default async function HomePage({ searchParams }: PageProps) {
     budget = Math.max(0, budget - initial.length);
     return { year, total: entries.length, initial };
   });
-  const filtered = Object.values(filter).some(Boolean);
+  const filtered = isFiltered(filter);
+  const query = filterSearchParams(filter).toString();
 
   return (
-    <PhotoViewerProvider photos={photos.map(viewerPhoto)}><main id="main" tabIndex={-1} className="archive-page">
+    <PhotoViewerProvider listUrl={`/api/viewer${query ? `?${query}` : ''}`}><main id="main" tabIndex={-1} className="archive-page">
       <nav aria-label="Main navigation" className="gallery-nav">
         <Link href="/" className="gallery-wordmark">Brito</Link>
         <div className="gallery-nav-links">
@@ -71,7 +89,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
       <section id="archive" aria-label="Photographs" className="archive-content">
         <header className="archive-toolbar">
-          <p>{filtered ? 'Your selection' : 'All photographs'}</p>
+          <p>{filtered ? describePhotoFilter(filter, allPhotos) ?? 'Your selection' : 'All photographs'}</p>
           <span className="archive-total">{photos.length} photographs / {years.size} {years.size === 1 ? 'year' : 'years'}</span>
           <ViewSwitcher />
         </header>

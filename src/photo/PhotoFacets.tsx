@@ -23,7 +23,8 @@ interface SectionDef {
 export function PhotoFacets({ facets }: PhotoFacetsProps) {
   const allSections: SectionDef[] = [
     { kind: 'year', heading: 'Years', values: facets.years },
-    { kind: 'tag', heading: 'Subjects & places', values: facets.tags },
+    { kind: 'place', heading: 'Places', values: facets.places },
+    { kind: 'tag', heading: 'Subjects', values: facets.tags },
     {
       kind: 'film',
       heading: 'Films',
@@ -38,6 +39,7 @@ export function PhotoFacets({ facets }: PhotoFacetsProps) {
       formatLabel: (label: string) =>
         isLensApple(label) ? formatAppleLensText(label) : label,
     },
+    { kind: 'focal', heading: 'Focal lengths', values: facets.focalLengths, formatLabel: (label: string) => /^\d+$/.test(label) ? `${label}mm` : label },
   ];
   const sections = allSections.filter(s => s.values.length > 0);
 

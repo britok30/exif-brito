@@ -8,6 +8,7 @@ import { imagePath } from '@/photo/url';
 import { isS3Url } from '@/storage/s3';
 import { searchKeywords } from '@/search/entries';
 import type { SearchEntry } from '@/search/types';
+import { PUBLIC_LIST_CACHE } from '@/photo/public-cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,5 +40,5 @@ export async function GET() {
         image: isS3Url(source) ? imagePath(source) : null };
     }),
   ];
-  return Response.json(entries, { headers: { 'Cache-Control': 'no-store' } });
+  return Response.json(entries, { headers: { 'Cache-Control': PUBLIC_LIST_CACHE } });
 }

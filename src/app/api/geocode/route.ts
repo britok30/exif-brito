@@ -9,9 +9,9 @@ export async function GET(req: Request) {
   const lat = parseFloat(params.get('lat') ?? '');
   const lng = parseFloat(params.get('lng') ?? '');
 
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
     return NextResponse.json(
-      { error: 'lat and lng query params are required' },
+      { error: 'lat (−90 to 90) and lng (−180 to 180) are required' },
       { status: 400 },
     );
   }

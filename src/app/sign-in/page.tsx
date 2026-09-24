@@ -1,4 +1,4 @@
-import { signIn } from '@/auth';
+import { signIn, SignInRateLimited } from '@/auth';
 import { AuthError } from 'next-auth';
 import { GalleryHeader } from '@/components/gallery-header';
 import { StudioIntro } from '@/components/studio-intro';
@@ -6,6 +6,7 @@ import { SignInForm } from './sign-in-form';
 
 export const metadata = { title: 'Studio sign in', robots: { index: false, follow: false } };
 const failure = 'We couldn’t sign you in. Check your email and password, then try again.';
+const limited = 'Too many attempts. Wait fifteen minutes, then try again.';
 
 export default async function SignInPage({ searchParams }: { searchParams: Promise<{ callbackUrl?: string; error?: string }> }) {
   const params = await searchParams;
@@ -17,6 +18,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
       await signIn('credentials', { email: formData.get('email'), password: formData.get('password'), redirectTo });
       return { error: '' };
     } catch (error) {
+      if (error instanceof SignInRateLimited || (error instanceof AuthError && (error as { code?: string }).code === 'rate_limited')) return { error: limited };
       if (error instanceof AuthError) return { error: failure };
       throw error;
     }

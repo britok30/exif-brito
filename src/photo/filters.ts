@@ -1,13 +1,18 @@
 import type { Photo } from '@/db';
 import { formatCameraName } from './camera';
+import { shortPhotoLocation } from './location';
+import { labelForFujifilmSimulation } from '@/exif/fujifilm';
+import { formatAppleLensText, isLensApple } from '@/platforms/apple';
 
-export type FacetKind = 'tag' | 'film' | 'camera' | 'lens' | 'year';
+export type FacetKind = 'tag' | 'place' | 'film' | 'camera' | 'lens' | 'focal' | 'year';
 
 export interface PhotoFilter {
   tag?: string;
+  place?: string;
   film?: string;
   camera?: string;
   lens?: string;
+  focal?: number;
   year?: number;
 }
 
@@ -19,43 +24,89 @@ export interface FacetValue {
 
 export interface PhotoFacets {
   tags: FacetValue[];
+  places: FacetValue[];
   films: FacetValue[];
   cameras: FacetValue[];
   lenses: FacetValue[];
+  focalLengths: FacetValue[];
   years: FacetValue[];
 }
 
-const cameraOf = (p: Photo): string | undefined => {
+type FilterablePhoto = Pick<Photo, 'tags' | 'locationName' | 'film' | 'make' | 'model' | 'lensModel' | 'focalLength' | 'takenAtNaive'>;
+
+/** The raw EXIF pair, so filter links keep working whatever label the camera is given. */
+export const cameraOf = (p: Pick<Photo, 'make' | 'model'>): string | undefined => {
   const parts = [p.make, p.model].filter(Boolean) as string[];
   return parts.length > 0 ? parts.join(' ') : undefined;
 };
 
-const yearOf = (p: Photo): number | undefined => {
-  if (!p.takenAt) return undefined;
-  const d = p.takenAt instanceof Date ? p.takenAt : new Date(p.takenAt);
-  return isNaN(d.getTime()) ? undefined : d.getFullYear();
+// The capture date as the camera recorded it, so a photograph filed under a year
+// on the page is found by that year's filter whatever the server's time zone.
+const yearOf = (p: Pick<Photo, 'takenAtNaive'>): number | undefined => {
+  const year = Number.parseInt(p.takenAtNaive?.slice(0, 4) ?? '', 10);
+  return Number.isFinite(year) ? year : undefined;
+};
+
+const positiveInt = (value?: string) => {
+  const number = value ? Number.parseInt(value, 10) : undefined;
+  return number && Number.isFinite(number) && number > 0 ? number : undefined;
 };
 
 export function parsePhotoFilter(search: Record<string, string | undefined>): PhotoFilter {
-  const year = search.year ? Number.parseInt(search.year, 10) : undefined;
   return {
     tag: search.tag || undefined,
+    place: search.place || undefined,
     film: search.film || undefined,
     camera: search.camera || undefined,
     lens: search.lens || undefined,
-    year: Number.isFinite(year) ? year : undefined,
+    focal: positiveInt(search.focal),
+    year: positiveInt(search.year),
   };
 }
 
-export function applyPhotoFilter(photos: Photo[], filter: PhotoFilter): Photo[] {
+export const isFiltered = (filter: PhotoFilter) => Object.values(filter).some(Boolean);
+
+export function applyPhotoFilter<T extends FilterablePhoto>(photos: T[], filter: PhotoFilter): T[] {
   return photos.filter(p => {
     if (filter.tag && !(p.tags ?? []).includes(filter.tag)) return false;
+    if (filter.place && shortPhotoLocation(p) !== filter.place) return false;
     if (filter.film && p.film !== filter.film) return false;
     if (filter.camera && cameraOf(p) !== filter.camera) return false;
     if (filter.lens && p.lensModel !== filter.lens) return false;
+    if (filter.focal && p.focalLength !== filter.focal) return false;
     if (filter.year && yearOf(p) !== filter.year) return false;
     return true;
   });
+}
+
+/** Query string for a filter, in a stable order, for links and API calls. */
+export function filterSearchParams(filter: PhotoFilter): URLSearchParams {
+  const params = new URLSearchParams();
+  for (const key of ['tag', 'place', 'film', 'camera', 'lens', 'focal', 'year'] as const) {
+    if (filter[key]) params.set(key, String(filter[key]));
+  }
+  return params;
+}
+
+/** Link to the gallery narrowed to one value. */
+export const filterHref = (kind: FacetKind, value: string | number) =>
+  `/?${filterSearchParams({ [kind]: value } as PhotoFilter)}#archive`;
+
+export const lensLabel = (lens: string) => isLensApple(lens) ? formatAppleLensText(lens) : lens;
+
+/** A short, human description of the active filter, e.g. “Classic Chrome, 2024”, for titles. */
+export function describePhotoFilter(filter: PhotoFilter, photos: Pick<Photo, 'make' | 'model'>[] = []): string | undefined {
+  const cameraPhoto = filter.camera ? photos.find(p => cameraOf(p) === filter.camera) : undefined;
+  const parts = [
+    filter.place,
+    filter.tag,
+    filter.film && labelForFujifilmSimulation(filter.film),
+    filter.camera && (cameraPhoto ? formatCameraName(cameraPhoto.make, cameraPhoto.model) : undefined) || filter.camera,
+    filter.lens && lensLabel(filter.lens),
+    filter.focal && `${filter.focal}mm`,
+    filter.year && String(filter.year),
+  ].filter(Boolean);
+  return parts.length ? parts.join(', ') : undefined;
 }
 
 const tally = (entries: Array<{ value: string; label?: string }>): FacetValue[] => {
@@ -72,10 +123,16 @@ const tally = (entries: Array<{ value: string; label?: string }>): FacetValue[] 
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 };
 
-export function buildPhotoFacets(photos: Photo[]): PhotoFacets {
+export function buildPhotoFacets(photos: FilterablePhoto[]): PhotoFacets {
   return {
     tags: tally(
       photos.flatMap(p => (p.tags ?? []).map(t => ({ value: t }))),
+    ),
+    places: tally(
+      photos
+        .map(p => shortPhotoLocation(p))
+        .filter((v): v is string => Boolean(v))
+        .map(v => ({ value: v })),
     ),
     films: tally(
       photos
@@ -94,6 +151,12 @@ export function buildPhotoFacets(photos: Photo[]): PhotoFacets {
         .filter((v): v is string => Boolean(v))
         .map(v => ({ value: v })),
     ),
+    focalLengths: tally(
+      photos
+        .map(p => p.focalLength)
+        .filter((v): v is number => Boolean(v && v > 0))
+        .map(v => ({ value: String(v), label: `${v}mm` })),
+    ).sort((a, b) => Number(a.value) - Number(b.value)),
     years: tally(
       photos
         .map(p => yearOf(p))

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { TbPhotoShare } from 'react-icons/tb';
+import { Share } from 'lucide-react';
 import { absoluteUrl } from '@/seo/site';
 
 export function SharePhotoButton({ id, title }: { id: string; title: string }) {
@@ -25,7 +25,7 @@ export function SharePhotoButton({ id, title }: { id: string; title: string }) {
   }
   return <span className="photo-share-control">
     <button type="button" className="photo-action-button" aria-label="Share photograph" title="Share photograph" onClick={share}>
-      <TbPhotoShare size={19} aria-hidden="true" />
+      <Share size={18} strokeWidth={1.25} aria-hidden="true" />
     </button>
     <span className="photo-share-status" role="status">{message}</span>
     {fallback && <input aria-label="Photograph share link" value={url} readOnly onFocus={event => event.target.select()} />}

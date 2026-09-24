@@ -23,7 +23,7 @@ export async function PhotoLibraryPage({ params, visibility }: { params: Library
   const entries = galleryPhotos(selection.entries, Infinity);
   const hidden = library.filter(photo => photo.hidden).length;
   const pageHref = (page: number) => libraryHref(visibility, { ...params, page: String(page) });
-  return <PhotoViewerProvider photos={entries.map(viewerPhoto)}><main id="main" tabIndex={-1} className="archive-page">
+  return <PhotoViewerProvider seed={entries.map(viewerPhoto)}><main id="main" tabIndex={-1} className="archive-page">
     <GalleryHeader />
     <StudioIntro title={visibility === 'hidden' ? 'Unpublished.' : visibility === 'published' ? 'Published.' : 'Your photographs.'}
       note={visibility === 'published' ? <>Everything on view,<br />newest first.</> : visibility === 'hidden' ? <>Waiting for your eye.<br />Publish when you’re ready.</> : <>The whole library,<br />on view and waiting.</>}

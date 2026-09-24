@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Private local photo review (original paths and previews)
 /.local/
+
+# The template is committed; real values stay local.
+!.env.example

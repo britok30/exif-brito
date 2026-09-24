@@ -1,119 +1,70 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import Image from 'next/image';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { KBarProvider, KBarPortal, KBarPositioner, KBarAnimator, KBarSearch,
-  KBarResults, useKBar, useMatches, useRegisterActions, VisualState } from 'kbar';
-import { useReducedMotion } from 'motion/react';
 import IconSearch from '@/components/icons/IconSearch';
-import { isSearchEntry } from './entries';
-import type { SearchEntry } from './types';
+import { loadIndex } from './index-loader';
+
+const SearchPalette = dynamic(() => import('./SearchPalette'), { ssr: false });
+
+interface SearchControls { open(): void; warm(): void }
+const SearchContext = createContext<SearchControls>({ open() {}, warm() {} });
+
+/** Single-key shortcuts, available on every public page. */
+const SHORTCUTS: Record<string, string> = { g: '/', j: '/?view=stacked', c: '/collections', r: '/random' };
+
+const isTyping = (target: EventTarget | null) =>
+  target instanceof HTMLElement && Boolean(target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]'));
 
 /**
- * The index is fetched once per page load, ahead of time when the browser is
- * idle or the visitor reaches for the search button, so the palette opens with
- * results already in hand. A failed load is forgotten so the next open retries.
+ * A light shell around the search palette: the button, ⌘K and the site's
+ * single-key shortcuts. The palette itself (kbar) is loaded on idle or on first
+ * use, so it never adds to a page's first load.
  */
-let index: Promise<SearchEntry[]> | null = null;
-function loadIndex(): Promise<SearchEntry[]> {
-  index ??= fetch('/api/search', { cache: 'no-store' })
-    .then(response => { if (!response.ok) throw new Error('Search unavailable'); return response.json() as Promise<unknown>; })
-    .then(data => {
-      if (!Array.isArray(data) || !data.every(isSearchEntry)) throw new Error('Invalid search response');
-      return data;
-    })
-    .catch(error => { index = null; throw error; });
-  return index;
-}
-
 export function SearchProvider({ children }: { children: ReactNode }) {
-  const reduced = useReducedMotion();
+  const router = useRouter();
+  const [loaded, setLoaded] = useState(false);
+  const [openRequest, setOpenRequest] = useState(0);
+  const toggle = useRef<(() => void) | null>(null);
+  const register = useCallback((next: (() => void) | null) => { toggle.current = next; }, []);
+  const warm = useCallback(() => { setLoaded(true); void loadIndex().catch(() => {}); }, []);
+  const open = useCallback(() => {
+    if (toggle.current) toggle.current();
+    else { warm(); setOpenRequest(n => n + 1); }
+  }, [warm]);
+
   useEffect(() => {
-    const idle = window.requestIdleCallback?.(() => void loadIndex().catch(() => {}), { timeout: 4000 })
-      ?? window.setTimeout(() => void loadIndex().catch(() => {}), 2500);
+    const idle = window.requestIdleCallback?.(warm, { timeout: 4000 }) ?? window.setTimeout(warm, 2500);
     return () => { window.cancelIdleCallback?.(idle as number); window.clearTimeout(idle as number); };
-  }, []);
-  return <KBarProvider options={{ animations: { enterMs: reduced ? 0 : 220, exitMs: reduced ? 0 : 180 } }}>
-    {children}<SearchPalette />
-  </KBarProvider>;
+  }, [warm]);
+
+  useEffect(() => {
+    const keydown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      // Once loaded, kbar handles ⌘K itself.
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && !toggle.current) { event.preventDefault(); open(); return; }
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || event.repeat || isTyping(event.target)) return;
+      if (document.querySelector('[role="dialog"]')) return;
+      if (event.key === '/') { event.preventDefault(); open(); return; }
+      const href = SHORTCUTS[event.key.toLowerCase()];
+      if (href && !window.location.pathname.startsWith('/admin')) { event.preventDefault(); router.push(href); }
+    };
+    window.addEventListener('keydown', keydown);
+    return () => window.removeEventListener('keydown', keydown);
+  }, [open, router]);
+
+  const controls = useMemo(() => ({ open, warm }), [open, warm]);
+  return <SearchContext.Provider value={controls}>
+    {children}
+    {loaded && <SearchPalette openRequest={openRequest} register={register} />}
+  </SearchContext.Provider>;
 }
 
 export function SearchButton() {
-  const { query } = useKBar();
-  const warm = () => void loadIndex().catch(() => {});
-  return <button type="button" className="gallery-icon-link" aria-label="Search photographs" title="Search photographs (⌘K / Ctrl+K)"
-    onPointerEnter={warm} onFocus={warm} onClick={() => query.toggle()}>
+  const { open, warm } = useContext(SearchContext);
+  return <button type="button" className="gallery-icon-link" aria-label="Search photographs" title="Search photographs (⌘K / Ctrl+K or /)"
+    onPointerEnter={warm} onFocus={warm} onClick={open}>
     <span aria-hidden="true"><IconSearch /></span>
   </button>;
-}
-
-const EXPLORE = [
-  { id: 'navigation:gallery', name: 'Gallery', path: '/' },
-  { id: 'navigation:journal', name: 'Journal', path: '/?view=stacked' },
-  { id: 'navigation:collections', name: 'Collections', path: '/collections' },
-];
-
-function SearchPalette() {
-  const router = useRouter();
-  const { query, open, typed } = useKBar(state => ({
-    open: state.visualState === VisualState.showing || state.visualState === VisualState.animatingIn,
-    typed: state.searchQuery.trim().length > 0,
-  }));
-  const [entries, setEntries] = useState<SearchEntry[]>([]);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    setStatus(entries.length ? 'ready' : 'loading');
-    loadIndex().then(data => { if (!cancelled) { setEntries(data); setStatus('ready'); } })
-      .catch(() => { if (!cancelled) setStatus('error'); });
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, attempt]);
-
-  const explore = useMemo(() => EXPLORE.map(item => ({ ...item, section: { name: 'Explore', priority: 3 }, perform: () => router.push(item.path) })), [router]);
-  const collections = useMemo(() => entries.filter(entry => entry.section === 'Collections')
-    .map(entry => ({ ...entry, section: { name: 'Collections', priority: 2 }, perform: () => router.push(entry.path) })), [entries, router]);
-  // Photographs join the list once the visitor types, so an empty palette is a short menu rather than 800 rows.
-  const photographs = useMemo(() => !typed ? [] : entries.filter(entry => entry.section === 'Photographs')
-    .map(entry => ({ ...entry, section: { name: 'Photographs', priority: 1 },
-      icon: entry.image ? <Image src={entry.image} alt="" fill sizes="44px" quality={60} unoptimized={!entry.image.startsWith('/')} /> : null,
-      perform: () => router.push(entry.path) })), [entries, typed, router]);
-  useRegisterActions(explore, [explore]);
-  useRegisterActions(collections, [collections]);
-  useRegisterActions(photographs, [photographs]);
-
-  return <KBarPortal><KBarPositioner className="search-positioner">
-    <KBarAnimator className="search-palette">
-      <div className="search-input-row"><span aria-hidden="true"><IconSearch width={20} /></span>
-        <KBarSearch defaultPlaceholder="Search a place, title, date, camera or film" aria-label="Search photographs, places, collections" className="search-input" />
-        <button type="button" className="search-close" aria-label="Close search" onClick={() => query.toggle()}>Esc</button>
-      </div>
-      <div className="search-feedback" role="status">
-        {status === 'loading' && 'Finding photographs…'}
-        {status === 'error' && <span>Search couldn’t load. <button type="button" onClick={() => setAttempt(n => n + 1)}>Try again</button></span>}
-      </div>
-      <SearchResults ready={status === 'ready'} typed={typed} total={entries.filter(entry => entry.section === 'Photographs').length} />
-      <footer className="search-footer"><span><kbd>↑</kbd><kbd>↓</kbd> Move</span><span><kbd>↵</kbd> Open</span><span><kbd>Esc</kbd> Close</span></footer>
-    </KBarAnimator>
-  </KBarPositioner></KBarPortal>;
-}
-
-const sectionName = (section: unknown) => typeof section === 'string' ? section : (section as { name?: string } | undefined)?.name;
-
-function SearchResults({ ready, typed, total }: { ready: boolean; typed: boolean; total: number }) {
-  const { results } = useMatches();
-  const photographsShown = results.filter(item => typeof item !== 'string' && sectionName(item.section) === 'Photographs').length;
-  return <>
-    {ready && !typed && <p className="search-hint">{total} photographs. Type to search them.</p>}
-    {ready && typed && !results.length && <p className="search-empty" role="status">Nothing matches. Try a place, a month, or a camera.</p>}
-    <KBarResults items={results} maxHeight={380} onRender={({ item, active }) => typeof item === 'string'
-      ? <div className="search-section">{item}{item === 'Photographs' && photographsShown > 0 ? <span>{photographsShown}</span> : null}</div>
-      : <div className={`search-result${active ? ' is-active' : ''}`}>
-        {sectionName(item.section) === 'Photographs' && <span className="search-thumb">{item.icon}</span>}
-        <span className="search-result-copy"><span>{item.name}</span>{item.subtitle && item.subtitle !== 'Collection' && <small>{item.subtitle}</small>}</span>
-      </div>} />
-  </>;
 }

@@ -1,4 +1,4 @@
-/* eslint-disable max-len */
+ 
 // Adapted with permission from sambecker/exif-photo-blog
 // (src/film/PhotoFilmIcon.tsx). Hand-illustrated film simulation glyphs by Sam Becker.
 import { CSSProperties } from 'react';

@@ -7,10 +7,11 @@ import type { FujifilmRecipe } from '@/exif/fujifilm';
  * What a gallery tile needs and nothing more. A full photo record is about
  * forty fields; serialising every one for a thousand tiles was most of the
  * home page's weight. Blur placeholders are only kept for the first screens.
+ * Storage URLs stay on the server: a tile carries only the proxy path of its rendition.
  */
 export type GalleryPhoto = Pick<Photo,
   'id' | 'title' | 'caption' | 'locationName' | 'tags' | 'takenAtNaive' | 'width' | 'height' | 'aspectRatio' | 'blurData'
-  | 'semanticDescription' | 'hidden' | 'url' | 'thumbnailUrl' | 'make' | 'model' | 'lensMake' | 'lensModel'
+  | 'semanticDescription' | 'hidden' | 'make' | 'model' | 'lensMake' | 'lensModel'
   | 'focalLength' | 'fNumber' | 'exposureTime' | 'iso' | 'film'> & { imageSrc: string; hasRecipe: boolean };
 
 /** How many tiles from the top of a page keep an inline blur placeholder. */
@@ -21,7 +22,7 @@ export function toGalleryPhoto(photo: Photo, blur: boolean): GalleryPhoto {
     id: photo.id, title: photo.title, caption: photo.caption, locationName: photo.locationName, tags: photo.tags,
     takenAtNaive: photo.takenAtNaive, width: photo.width, height: photo.height, aspectRatio: photo.aspectRatio,
     blurData: blur && photo.blurData && photo.blurData.length <= MAX_INLINE_BLUR_LENGTH ? photo.blurData : null,
-    semanticDescription: photo.semanticDescription, hidden: photo.hidden, url: photo.url, thumbnailUrl: photo.thumbnailUrl,
+    semanticDescription: photo.semanticDescription, hidden: photo.hidden,
     make: photo.make, model: photo.model, lensMake: photo.lensMake, lensModel: photo.lensModel,
     focalLength: photo.focalLength, fNumber: photo.fNumber, exposureTime: photo.exposureTime, iso: photo.iso,
     film: photo.film,

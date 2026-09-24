@@ -11,6 +11,7 @@ import {
   timestamp,
   uuid,
   primaryKey,
+  index,
 } from 'drizzle-orm/pg-core';
 
 export const photos = pgTable('photos', {
@@ -51,7 +52,11 @@ export const photos = pgTable('photos', {
   hidden: boolean().default(false),
   updatedAt: timestamp({ withTimezone: true }).defaultNow(),
   createdAt: timestamp({ withTimezone: true }).defaultNow(),
-});
+}, table => [
+  // Every list reads newest first; uploads look a photograph up by its storage URL.
+  index('photos_taken_at_id_idx').on(table.takenAt.desc(), table.id.desc()),
+  index('photos_url_idx').on(table.url),
+]);
 
 export const albums = pgTable('albums', {
   id: uuid().primaryKey().defaultRandom(),
@@ -75,8 +80,22 @@ export const albumPhoto = pgTable(
       .references(() => photos.id, { onDelete: 'cascade' }),
     sortOrder: smallint().notNull().default(0),
   },
-  table => [primaryKey({ columns: [table.albumId, table.photoId] })],
+  table => [
+    primaryKey({ columns: [table.albumId, table.photoId] }),
+    // The primary key leads with the album; finding a photograph's albums needs its own index.
+    index('album_photo_photo_id_idx').on(table.photoId),
+  ],
 );
+
+/** Failed studio sign-ins, keyed by a salted hash of the client address, for rate limiting. */
+export const signInFailures = pgTable('sign_in_failures', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  source: varchar({ length: 64 }).notNull(),
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+}, table => [
+  index('sign_in_failures_source_created_at_idx').on(table.source, table.createdAt),
+  index('sign_in_failures_created_at_idx').on(table.createdAt),
+]);
 
 export type Photo = typeof photos.$inferSelect;
 export type PhotoInsert = typeof photos.$inferInsert;

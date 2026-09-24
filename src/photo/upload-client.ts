@@ -55,7 +55,7 @@ export async function presignAndUpload(
       const abort = () => xhr.abort();
       const finish = (error?: Error) => {
         signal?.removeEventListener('abort', abort);
-        error ? reject(error) : resolve();
+        if (error) reject(error); else resolve();
       };
       xhr.upload.onprogress = event => {
         if (event.lengthComputable) onProgress?.(Math.round(event.loaded / event.total * 100));

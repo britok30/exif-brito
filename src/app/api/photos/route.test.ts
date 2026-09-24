@@ -1,6 +1,5 @@
 vi.mock('@/auth', () => ({ auth: vi.fn(async () => ({ user: { email: 'owner@example.com' } })) }));
 vi.mock('@/collections/sync', () => ({ syncDestinationCollections: vi.fn(async () => {}) }));
-import { syncDestinationCollections } from '@/collections/sync';
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 
 beforeAll(() => {
@@ -45,6 +44,8 @@ vi.mock('@/storage/s3', async () => {
     s3SignedUrl: vi.fn(async (key: string) => `https://signed.example/${key}`),
     s3Put: vi.fn(async (_buf: unknown, key: string) =>
       `https://test-bucket.s3.us-east-2.amazonaws.com/${key}`),
+    s3Size: vi.fn(async () => 8),
+    s3Delete: vi.fn(async () => ({})),
   };
 });
 
@@ -54,8 +55,10 @@ vi.mock('@/photo/upload-record', () => ({
 }));
 
 const insertedRows: Record<string, unknown>[] = [];
+const deletedRows: unknown[] = [];
 vi.mock('@/db', () => ({
   db: {
+    delete: () => ({ where: async (predicate: unknown) => { deletedRows.push(predicate); } }),
     insert: () => ({
       values: (row: Record<string, unknown>) => ({
         returning: async () => {
@@ -174,6 +177,45 @@ it('can create a hidden photo without dropping the original composition', async 
   const res = await post({ key: 'photos/hidden.jpg', hidden: true, tags: [] });
   expect(res.status).toBe(200);
   expect(insertedRows[0]).toMatchObject({ hidden: true, tags: [], width: 4000, height: 3000, aspectRatio: 4 / 3 });
+});
+
+it('checks the stored size before downloading, and removes an oversized upload', async () => {
+  const storage = await import('@/storage/s3');
+  const fetch = vi.fn(async () => new Response(new ArrayBuffer(8), { status: 200 }));
+  vi.stubGlobal('fetch', fetch);
+  vi.mocked(storage.s3Size).mockResolvedValueOnce(60_000_000);
+  const res = await post({ key: 'photos/huge.jpg' });
+  expect(res.status).toBe(413);
+  expect(storage.s3Delete).toHaveBeenCalledWith('photos/huge.jpg');
+  expect(fetch).not.toHaveBeenCalled();
+  vi.mocked(storage.s3Size).mockResolvedValueOnce(undefined);
+  expect((await post({ key: 'photos/gone.jpg' })).status).toBe(404);
+});
+
+it('never reports storage errors verbatim', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 500 })));
+  const res = await post({ key: 'photos/abc.jpg' });
+  expect(res.status).toBe(502);
+  expect((await res.json()).error).not.toMatch(/S3|500/);
+});
+
+it('removes the row again when the original was discarded mid-publish', async () => {
+  const storage = await import('@/storage/s3');
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(new ArrayBuffer(8), { status: 200 })));
+  deletedRows.length = 0;
+  vi.mocked(storage.s3Size).mockResolvedValueOnce(8).mockResolvedValueOnce(undefined);
+  const res = await post({ key: 'photos/raced.jpg' });
+  expect(res.status).toBe(409);
+  expect(deletedRows).toHaveLength(1);
+});
+
+it('applies the editor’s limits and cleans tags on upload', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(new ArrayBuffer(8), { status: 200 })));
+  expect((await post({ key: 'photos/abc.jpg', caption: 'x'.repeat(10001) })).status).toBe(400);
+  expect((await post({ key: 'photos/abc.jpg', tags: Array.from({ length: 51 }, (_, i) => `t${i}`) })).status).toBe(400);
+  insertedRows.length = 0;
+  await post({ key: 'photos/tags.jpg', tags: [' Tokyo ', 'Tokyo', '', 'night'] });
+  expect(insertedRows[0].tags).toEqual(['Tokyo', 'night']);
 });
 
 it('standardizes manual and tag-only Japanese upload locations', async () => {

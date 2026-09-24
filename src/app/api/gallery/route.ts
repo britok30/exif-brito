@@ -1,6 +1,7 @@
 import { getPhotos } from '@/photo/query';
 import { applyPhotoFilter, parsePhotoFilter } from '@/photo/filters';
 import { toGalleryPhoto } from '@/photo/gallery-photo';
+import { PUBLIC_LIST_CACHE } from '@/photo/public-cache';
 
 export const dynamic = 'force-dynamic';
 const MAX_BATCH = 120;
@@ -15,5 +16,5 @@ export async function GET(request: Request) {
   const filter = parsePhotoFilter(Object.fromEntries(url.searchParams));
   const photos = applyPhotoFilter(await getPhotos(), filter).filter(photo => photo.takenAtNaive.startsWith(year));
   return Response.json({ total: photos.length, photos: photos.slice(offset, offset + limit).map(photo => toGalleryPhoto(photo, false)) },
-    { headers: { 'Cache-Control': 'no-store' } });
+    { headers: { 'Cache-Control': PUBLIC_LIST_CACHE } });
 }

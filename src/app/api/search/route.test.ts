@@ -16,7 +16,7 @@ it('indexes the cached public list and only published collections, without stora
   mocks.distinct.mockReturnValueOnce(query([{ slug: 'london', title: 'London' }]));
   const response = await GET();
   const entries = await response.json();
-  expect(response.headers.get('cache-control')).toBe('no-store');
+  expect(response.headers.get('cache-control')).toContain('s-maxage=');
   expect(entries.map((e: { path: string }) => e.path)).toEqual(['/collections/london', '/p/abcdefgh']);
   expect(entries[1].keywords).toContain('Along the river');
   expect(entries[1].keywords).toContain('travel');

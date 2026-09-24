@@ -72,6 +72,12 @@ describe('getOffsetFromExif', () => {
     expect(getOffsetFromExif(exif, { OffsetTime: '+01:00' })).toBe('+01:00');
   });
 
+  it('prefers the capture offset over the modification offset', () => {
+    const exif = { tags: { OffsetTime: '+01:00', OffsetTimeOriginal: '-07:00' } } as unknown as ExifData;
+    expect(getOffsetFromExif(exif, undefined)).toBe('-07:00');
+    expect(getOffsetFromExif({ tags: {} } as ExifData, { OffsetTime: '+01:00', OffsetTimeOriginal: '+05:30' })).toBe('+05:30');
+  });
+
   it('returns undefined when no offset present', () => {
     const exif = { tags: { Make: 'FUJIFILM' } } as unknown as ExifData;
     expect(getOffsetFromExif(exif, { ImageWidth: 4000 })).toBeUndefined();
@@ -90,11 +96,12 @@ describe('parseTakenAt', () => {
     expect(takenAt?.toISOString()).toBe('2024-08-15T14:30:00.000Z');
   });
 
-  it('accepts Date instance', () => {
-    const d = new Date('2024-08-15T14:30:00Z');
-    const { takenAt, takenAtNaive } = parseTakenAt(d);
+  it('reads a Date revived by exifr in local time without shifting it', () => {
+    // exifr turns "2024:08:15 14:30:00" into a local-time Date, whatever the server's zone.
+    const d = new Date(2024, 7, 15, 14, 30, 0);
+    const { takenAt, takenAtNaive } = parseTakenAt(d, '+09:00');
     expect(takenAtNaive).toBe('2024-08-15T14:30:00');
-    expect(takenAt?.toISOString()).toBe('2024-08-15T14:30:00.000Z');
+    expect(takenAt?.toISOString()).toBe('2024-08-15T05:30:00.000Z');
   });
 
   it('returns empty object for undefined input', () => {

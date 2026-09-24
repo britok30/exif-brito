@@ -47,7 +47,7 @@ describe('POST /api/upload', () => {
   });
 
   it('returns 200 with key, uploadUrl, publicUrl on valid request', async () => {
-    const res = await post({ filename: 'photo.jpg', contentType: 'image/jpeg' });
+    const res = await post({ filename: 'photo.jpg', contentType: 'image/jpeg', size: 1024 });
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.key).toMatch(/^photos\/[a-z0-9]{16}\.jpg$/);
@@ -58,9 +58,15 @@ describe('POST /api/upload', () => {
   });
 
   it('preserves heic extension', async () => {
-    const res = await post({ filename: 'IMG_0001.HEIC', contentType: 'image/heic' });
+    const res = await post({ filename: 'IMG_0001.HEIC', contentType: 'image/heic', size: 1024 });
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.key).toMatch(/\.HEIC$/);
   });
+});
+
+it('requires a real size within the limit before signing an upload', async () => {
+  for (const size of [undefined, 0, -1, 'big', 50_000_001]) {
+    expect((await post({ filename: 'photo.jpg', contentType: 'image/jpeg', size })).status).toBe(400);
+  }
 });

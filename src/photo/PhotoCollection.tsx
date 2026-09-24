@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { PhotoTile } from './PhotoTile';
 import { JournalViewContext } from './journal-view';
 import type { GalleryPhoto } from './gallery-photo';
-import type { PhotoFilter } from './filters';
+import { filterSearchParams, type PhotoFilter } from './filters';
 
 export interface MorePhotos { year: string; total: number; filter: PhotoFilter }
 
@@ -46,9 +46,9 @@ function LoadMore({ more, offset, onLoaded }: { more: MorePhotos; offset: number
     const observer = new IntersectionObserver(entries => {
       if (!entries.some(entry => entry.isIntersecting)) return;
       observer.disconnect();
-      const params = new URLSearchParams({ year: more.year, offset: String(offset), limit: String(BATCH) });
-      for (const [key, value] of Object.entries(more.filter)) if (value) params.set(key, String(value));
-      fetch(`/api/gallery?${params}`, { cache: 'no-store' })
+      const params = filterSearchParams(more.filter);
+      params.set('year', more.year); params.set('offset', String(offset)); params.set('limit', String(BATCH));
+      fetch(`/api/gallery?${params}`)
         .then(response => { if (!response.ok) throw new Error(); return response.json() as Promise<{ photos: GalleryPhoto[] }>; })
         .then(data => { if (!cancelled) onLoaded(data.photos); })
         .catch(() => { if (!cancelled) setFailed(true); });

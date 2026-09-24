@@ -1,5 +1,4 @@
 vi.mock('@/collections/sync', () => ({ syncDestinationCollections: vi.fn(async () => {}) }));
-import { syncDestinationCollections } from '@/collections/sync';
 import { beforeEach, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ auth: vi.fn(), update: vi.fn(), set: vi.fn(), where: vi.fn(), returning: vi.fn(), revalidate: vi.fn() }));
 vi.mock('@/auth', () => ({ auth: mocks.auth }));

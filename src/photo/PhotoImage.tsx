@@ -13,6 +13,8 @@ export function PhotoImage({ imageKey, src, onError, ...props }: Omit<ComponentP
 
   // Storage keys are immutable. Retry an expired, not-yet-loaded rendition with
   // the latest signature, without replacing photographs already on screen.
+  // A plain <img> on purpose: it keeps a rendition on screen across URL renewals; callers pass alt.
+  // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
   return <img {...props} src={changedImage ? src : source.src} onError={event => {
     setSource({ imageKey, src, failed: source.src === src });
     onError?.(event);

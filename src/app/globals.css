@@ -58,7 +58,7 @@
 :root {
   --bg: #ffffff;
   --fg: #000000;
-  --fg-2: #999999;   /* secondary: dates, counts, inactive toggles */
+  --fg-2: #767676;   /* secondary: dates, counts, inactive toggles (4.5:1 on white) */
   --fg-3: #b3b3b3;   /* disabled */
   --fg-alpha: rgba(0, 0, 0, .1);
   --theme-duration: .64s;
@@ -621,3 +621,9 @@ img, .viewer-gesture-stage {
 @media print {
   img, .viewer-gesture-stage { visibility: hidden !important; }
 }
+
+/* Photograph page map: a quiet, framed embed at the width of the details. */
+.photo-map { border-top:1px solid var(--fg); padding-top:20px; }
+.photo-map iframe { display:block; width:100%; aspect-ratio:16 / 7; border:0; filter:grayscale(1); }
+:root[data-theme="dark"] .photo-map iframe { filter:grayscale(1) invert(.92) hue-rotate(180deg); }
+@media (max-width:700px) { .photo-map iframe { aspect-ratio:4 / 3; } }

@@ -8,9 +8,10 @@ import { formatAppleLensText, isLensApple } from '@/platforms/apple';
 import { shortPhotoLocation } from './location';
 import { formatCameraName } from './camera';
 import { formatExposureTime } from './format';
-import { RiExpandDiagonalLine } from 'react-icons/ri';
+import { Maximize2 } from 'lucide-react';
 import { SharePhotoButton } from './SharePhotoButton';
 import { usePhotoViewer } from './PhotoViewerProvider';
+import { viewerPhoto } from './viewer-data';
 
 const formatExposure = (photo: GalleryPhoto) =>
   [
@@ -91,7 +92,7 @@ export function PhotoJournalDetails({ photo }: { photo: GalleryPhoto }) {
         )}
 
       <div className="journal-photo-actions">
-        <button type="button" className="photo-action-button" aria-label="Enlarge photograph" title="Enlarge photograph" onClick={event => open?.(photo.id, event)}><RiExpandDiagonalLine size={18} aria-hidden="true" /></button>
+        <button type="button" className="photo-action-button" aria-label="Enlarge photograph" title="Enlarge photograph" onClick={event => open?.(photo.id, event, viewerPhoto(photo))}><Maximize2 size={17} strokeWidth={1.25} aria-hidden="true" /></button>
         {!photo.hidden && <SharePhotoButton id={photo.id} title={photo.title || shortPhotoLocation(photo) || 'Photograph by Brito'} />}
       </div>
     </div>

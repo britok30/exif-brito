@@ -26,6 +26,9 @@ export async function deletePhotoAction(
   if (!isOwner(session)) {
     return { ok: false, error: 'unauthorized' };
   }
+  if (typeof id !== 'string' || !/^[a-z0-9]{8}$/i.test(id)) {
+    return { ok: false, error: 'not_found' };
+  }
 
   const [photo] = await db
     .select()
@@ -51,5 +54,8 @@ export async function deletePhotoAction(
 
   revalidatePhotos('action');
   revalidatePath('/');
+  // Album memberships go with the row (ON DELETE CASCADE), so series pages change too.
+  revalidatePath('/collections', 'layout');
+  revalidatePath('/admin/collections');
   return { ok: true };
 }

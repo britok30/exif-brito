@@ -14,7 +14,7 @@ export const MAX_INLINE_BLUR_LENGTH = 2000;
  * list, and blur placeholders only matter near the top of a page, so they
  * are kept for the first chunk alone; every other row leaves them out.
  */
-const galleryColumns = (withBlur: boolean) => ({
+export const galleryColumns = (withBlur: boolean) => ({
   ...getTableColumns(photos),
   blurData: withBlur
     ? sql<string | null>`case when length(${photos.blurData}) <= ${MAX_INLINE_BLUR_LENGTH} then ${photos.blurData} end`
@@ -26,7 +26,7 @@ const publicOnly = or(eq(photos.hidden, false), isNull(photos.hidden));
 const newestFirst = [desc(photos.takenAt), desc(photos.id)];
 
 // The cache stores JSON, so timestamps come back as strings and need reviving.
-const reviveDates = (row: Photo): Photo => ({
+export const reviveDates = (row: Photo): Photo => ({
   ...row,
   takenAt: new Date(row.takenAt),
   updatedAt: row.updatedAt ? new Date(row.updatedAt) : null,

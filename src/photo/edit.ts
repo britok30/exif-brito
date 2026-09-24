@@ -8,14 +8,17 @@ export interface PhotoEdits {
   hidden: boolean;
 }
 
+export const MAX_CAPTION = 10000;
+export const MAX_TAGS = 50;
+
 export function parsePhotoEdits(input: unknown): PhotoEdits | undefined {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return;
   const value = input as Record<string, unknown>;
   if (Object.keys(value).some(key => !['title', 'caption', 'locationName', 'tags', 'hidden'].includes(key))) return;
-  for (const [key, limit] of [['title', 255], ['caption', 10000], ['locationName', 255]] as const) {
+  for (const [key, limit] of [['title', 255], ['caption', MAX_CAPTION], ['locationName', 255]] as const) {
     if (typeof value[key] !== 'string' || value[key].length > limit) return;
   }
-  if (typeof value.hidden !== 'boolean' || !Array.isArray(value.tags) || value.tags.length > 50 ||
+  if (typeof value.hidden !== 'boolean' || !Array.isArray(value.tags) || value.tags.length > MAX_TAGS ||
       value.tags.some(tag => typeof tag !== 'string' || tag.length > 255)) return;
   return {
     title: (value.title as string).trim(), caption: (value.caption as string).trim(),

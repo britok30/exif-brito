@@ -2,6 +2,7 @@ import { and, eq, inArray, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { db, albums, albumPhoto, photos } from '@/db';
 import { automaticLocations, planDestinationMembership } from './destinations';
+import { revalidatePhotos } from '@/photo/query';
 
 export async function syncDestinationCollections(photoIds: string[]) {
   if (!photoIds.length) return;
@@ -13,11 +14,19 @@ export async function syncDestinationCollections(photoIds: string[]) {
     db.select().from(albumPhoto).where(inArray(albumPhoto.albumId, destinations.map(album => album.id))),
   ]);
   const plan = planDestinationMembership(destinations, members, entries);
-  const remove = db.delete(albumPhoto).where(or(...plan.remove.map(member => and(eq(albumPhoto.albumId, member.albumId), eq(albumPhoto.photoId, member.photoId)))));
-  if (plan.add.length && plan.remove.length) {
-    await db.batch([remove, db.insert(albumPhoto).values(plan.add).onConflictDoNothing()]);
-  } else if (plan.add.length) await db.insert(albumPhoto).values(plan.add).onConflictDoNothing();
-  else if (plan.remove.length) await remove;
+  if (plan.add.length || plan.remove.length) await applyPlan(plan);
   revalidatePath('/collections', 'layout');
   revalidatePath('/admin/collections');
+}
+
+async function applyPlan(plan: ReturnType<typeof planDestinationMembership>) {
+  // Built only when there is something to remove: `or()` of nothing would match every membership.
+  const remove = plan.remove.length
+    ? db.delete(albumPhoto).where(or(...plan.remove.map(member => and(eq(albumPhoto.albumId, member.albumId), eq(albumPhoto.photoId, member.photoId)))))
+    : undefined;
+  const add = plan.add.length ? db.insert(albumPhoto).values(plan.add).onConflictDoNothing() : undefined;
+  if (remove && add) await db.batch([remove, add]);
+  else await (remove ?? add);
+  // Cached collection lists and the search index carry the photos tag.
+  revalidatePhotos();
 }

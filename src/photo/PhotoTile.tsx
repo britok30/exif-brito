@@ -14,6 +14,7 @@ import { formatCaptureDate } from './format';
 import { usePhotoViewer } from './PhotoViewerProvider';
 import { useJournalView } from './journal-view';
 import { useImageReveal } from './image-reveal';
+import { viewerPhoto } from './viewer-data';
 
 interface PhotoTileProps {
   photo: GalleryPhoto;
@@ -47,12 +48,12 @@ export const PhotoTile = memo(function PhotoTile({ photo, imageSrc, priority, is
   const remote = !imageSrc.startsWith('/');
   return <article ref={tile} className="archive-tile" data-photo-id={photo.id} style={{ '--ratio': ratio } as CSSProperties}>
     <div className="collection-image">
-      <Link href={`/p/${photo.id}`} className="archive-photo-link" aria-label={`View ${label}`} onClick={event => openViewer?.(photo.id, event)}>
+      <Link href={`/p/${photo.id}`} className="archive-photo-link" aria-label={`View ${label}`} onClick={event => openViewer?.(photo.id, event, viewerPhoto(photo))}>
         <div className="archive-photo-stage">
           {/* The frame is exactly the painted photograph, so a layout animation scales it uniformly. */}
           <motion.div layout className="archive-photo-frame" transition={transition}>
             <Image src={imageSrc} alt={photo.semanticDescription || photo.title || photo.caption || `Photograph${place ? ` in ${place}` : ''} by Brito`}
-              fill sizes={SIZES} quality={80} priority={priority} unoptimized={remote}
+              fill sizes={SIZES} quality={80} loading={priority ? 'eager' : undefined} fetchPriority={priority ? 'high' : undefined} unoptimized={remote}
               placeholder={photo.blurData ? 'blur' : 'empty'} blurDataURL={photo.blurData ?? undefined} />
           </motion.div>
         </div>

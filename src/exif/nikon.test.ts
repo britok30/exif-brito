@@ -26,12 +26,12 @@ const buildNikonMakerNote = ({
   const isLE = endian === 'LE';
   const u16 = (n: number) => {
     const b = Buffer.alloc(2);
-    isLE ? b.writeUInt16LE(n, 0) : b.writeUInt16BE(n, 0);
+    if (isLE) b.writeUInt16LE(n, 0); else b.writeUInt16BE(n, 0);
     return b;
   };
   const u32 = (n: number) => {
     const b = Buffer.alloc(4);
-    isLE ? b.writeUInt32LE(n, 0) : b.writeUInt32BE(n, 0);
+    if (isLE) b.writeUInt32LE(n, 0); else b.writeUInt32BE(n, 0);
     return b;
   };
 

@@ -11,7 +11,7 @@
 .photo-share-control { position:relative; display:inline-flex; align-items:center; flex-wrap:wrap; }
 .photo-share-status { font-size:11px; line-height:1.5; }
 .photo-share-status:empty { display:none; }
-.photo-share-control input { max-width:240px; width:100%; padding:8px; font-size:12px; border:1px solid var(--fg-3); }
+.photo-share-control input { max-width:240px; width:100%; padding:8px; font-size:12px; border:1px solid var(--fg-2); }
 /* Search: a rule-bordered panel in the page's own colours, 12px throughout, photographs shown with their picture. */
 .search-positioner { z-index:100; padding:12vh 20px 20px !important; background:color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter:blur(14px); }
 .search-palette { width:100%; max-width:640px; overflow:hidden !important; border:1px solid var(--fg); background:var(--bg); color:var(--fg); }
@@ -47,3 +47,4 @@
   .search-section, .search-feedback, .search-empty, .search-hint, .search-footer { padding-left:12px; padding-right:12px; }
 }
 @media(max-width:420px) { .gallery-nav { gap:16px; } .gallery-nav-links { gap:12px; } }
+.search-result .search-shortcut { margin-left:auto; font:inherit; font-size:11px; color:var(--fg-2); }

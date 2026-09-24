@@ -3,11 +3,14 @@ import { syncDestinationCollections } from '@/collections/sync';
 import { normalizeLocationName, knownLocationFromTags } from '@/photo/location';
 import { NextRequest, NextResponse } from 'next/server';
 import { extractExif } from '@/exif';
-import { S3_BASE_URL, s3FetchBuffer, s3Put } from '@/storage/s3';
+import { S3_BASE_URL, s3Delete, s3FetchBuffer, s3Put, s3Size } from '@/storage/s3';
 import { mapExifToPhotoInsert } from '@/photo';
 import { revalidatePhotos } from '@/photo/query';
 import { createUploadedPhoto, findUploadedPhoto } from '@/photo/upload-record';
+import { db, photos } from '@/db';
+import { eq } from 'drizzle-orm';
 import { isUploadKey, MAX_UPLOAD_BYTES } from '@/photo/upload-policy';
+import { MAX_CAPTION, MAX_TAGS } from '@/photo/edit';
 import {
   generateBlurDataUrl,
   readPhotoDimensions,
@@ -51,12 +54,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'S3 is not configured' }, { status: 500 });
   }
 
+  // The same limits as editing a photograph later.
   if (['title', 'caption', 'locationName'].some(field => body[field as keyof RequestBody] != null && typeof body[field as keyof RequestBody] !== 'string') ||
       (body.hidden != null && typeof body.hidden !== 'boolean') ||
-      (body.tags != null && (!Array.isArray(body.tags) || body.tags.some(tag => typeof tag !== 'string' || tag.length > 255))) ||
-      (body.title?.length ?? 0) > 255 || (body.locationName?.length ?? 0) > 255) {
+      (body.tags != null && (!Array.isArray(body.tags) || body.tags.length > MAX_TAGS || body.tags.some(tag => typeof tag !== 'string' || tag.length > 255))) ||
+      (body.title?.length ?? 0) > 255 || (body.locationName?.length ?? 0) > 255 || (body.caption?.length ?? 0) > MAX_CAPTION) {
     return NextResponse.json({ error: 'Invalid photo details' }, { status: 400 });
   }
+  const tags = body.tags && [...new Set(body.tags.map(tag => tag.trim()).filter(Boolean))];
   const existing = await findUploadedPhoto(key);
   if (existing) {
     try { await syncDestinationCollections([existing.id]); }
@@ -64,27 +69,32 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ photo: existing });
   }
 
+  // Check the stored size before downloading anything: the browser's reported
+  // size is only a hint, and an oversized object is removed, not processed.
   let buffer: Buffer;
   try {
+    const size = await s3Size(key);
+    if (size === undefined) return NextResponse.json({ error: 'This upload has expired. Add the photograph again.' }, { status: 404 });
+    if (size > MAX_UPLOAD_BYTES) {
+      await s3Delete(key).catch(() => {});
+      return NextResponse.json({ error: 'Image exceeds the 50 MB limit' }, { status: 413 });
+    }
     buffer = await s3FetchBuffer(key);
-  } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'fetch failed' },
-      { status: 502 },
-    );
+  } catch (error) {
+    console.error('Could not read upload from storage', key, error);
+    return NextResponse.json({ error: 'Storage couldn’t be reached. Retry in a moment.' }, { status: 502 });
   }
 
-  if (buffer.length > MAX_UPLOAD_BYTES) return NextResponse.json({ error: 'Image exceeds the 50 MB limit' }, { status: 413 });
-
   try {
-    // Run EXIF, thumbnail and blur generation in parallel — they all read the
-    // same buffer and don't depend on each other.
-    const [exif, thumbnailBuffer, blurDataUrl, dimensions] = await Promise.all([
+    // EXIF, dimensions and the display copy all read the original; the blur
+    // placeholder is made from the far smaller display copy, so the original
+    // is decoded as few times as possible.
+    const [exif, thumbnailBuffer, dimensions] = await Promise.all([
       extractExif(buffer),
       generateThumbnailBuffer(buffer),
-      generateBlurDataUrl(buffer),
       readPhotoDimensions(buffer),
     ]);
+    const blurDataUrl = await generateBlurDataUrl(thumbnailBuffer);
 
     const thumbnailKey = thumbnailKeyFor(key);
     const thumbnailUrl = await s3Put(thumbnailBuffer, thumbnailKey, 'image/jpeg');
@@ -105,18 +115,25 @@ export async function POST(req: NextRequest) {
       ...insert,
       title: body.title === undefined ? insert.title : trim(body.title) ?? null,
       caption: body.caption === undefined ? insert.caption : trim(body.caption) ?? null,
-      tags: body.tags ?? insert.tags,
+      tags: tags ?? insert.tags,
       hidden: body.hidden ?? false,
-      locationName: locationName ? normalizeLocationName(locationName) : knownLocationFromTags(body.tags ?? insert.tags) ?? locationName,
+      locationName: locationName ? normalizeLocationName(locationName) : knownLocationFromTags(tags ?? insert.tags) ?? locationName,
       thumbnailUrl,
       blurData: blurDataUrl,
     };
 
     const photo = await createUploadedPhoto(key, merged);
+    // A discard racing this publish may have removed the original after it was
+    // read; never leave a photograph whose original is gone.
+    if (await s3Size(key) === undefined) {
+      await db.delete(photos).where(eq(photos.id, photo.id));
+      return NextResponse.json({ error: 'This upload was discarded while it was being added.' }, { status: 409 });
+    }
     await syncDestinationCollections([photo.id]);
     revalidatePhotos();
     return NextResponse.json({ photo });
-  } catch {
+  } catch (error) {
+    console.error('Could not publish upload', key, error);
     return NextResponse.json({ error: /\.(heic|heif)$/i.test(key)
       ? 'This HEIC/HEIF image could not be processed. Export it as JPEG and try again.'
       : 'Could not publish this photograph. Retry; an already saved photo will not be duplicated.' }, { status: 500 });

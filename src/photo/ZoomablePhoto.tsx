@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
-import { RotateCcw } from 'lucide-react';
-import { RiCollapseDiagonalLine, RiExpandDiagonalLine } from 'react-icons/ri';
+import { Maximize2, Minimize2, RotateCcw } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import type { ViewerPhoto } from './viewer-data';
 import { FIT, constrainView, zoomView, swipeDirection, type ViewTransform } from './viewer-geometry';
@@ -102,7 +101,10 @@ export function ZoomablePhoto({ photo, preview, navigate }: { photo: ViewerPhoto
       }}
       onDoubleClick={event => { if (performance.now() - lastTouch.current > 600) zoom(live.current.scale > 1 ? 1 : 2, event.clientX, event.clientY, true); }}>
       <motion.div className="viewer-transform" initial={false} animate={{ x: view.x, y: view.y, scale: view.scale }} transition={{ duration: smooth && !reduced ? 0.32 : 0, ease: [0.4, 0, 0.2, 1] }}>
+        {/* The viewer needs the full display copy for zooming, not an optimised rendition. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         {preview && !loaded && <img className="viewer-preview" src={preview} alt="" aria-hidden="true" draggable={false} />}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img key={`display-${attempt}`} className="viewer-full-image" src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} draggable={false}
           style={{ opacity: loaded ? 1 : 0 }} onLoad={() => { setLoaded(true); setFailed(false); }} onError={() => setFailed(true)} />
       </motion.div>
@@ -110,9 +112,9 @@ export function ZoomablePhoto({ photo, preview, navigate }: { photo: ViewerPhoto
     </div>
     {failed && <div className="viewer-load-error" role="alert"><p>This photograph couldn’t load.</p><button type="button" className="studio-button" onClick={() => { setFailed(false); setAttempt(value => value + 1); }}>Try again</button></div>}
     <div className="viewer-zoom-controls" aria-label="Photograph zoom">
-      <button type="button" aria-label="Zoom out" disabled={view.scale <= 1} onClick={() => zoom(view.scale / 1.5, undefined, undefined, true)}><RiCollapseDiagonalLine size={18} aria-hidden="true" /></button>
+      <button type="button" aria-label="Zoom out" disabled={view.scale <= 1} onClick={() => zoom(view.scale / 1.5, undefined, undefined, true)}><Minimize2 size={17} strokeWidth={1.25} aria-hidden="true" /></button>
       <button type="button" aria-label="Reset zoom" onClick={() => update(FIT, true)}><RotateCcw size={13} /><span>{Math.round(view.scale * 100)}%</span></button>
-      <button type="button" aria-label="Zoom in" disabled={view.scale >= 4} onClick={() => zoom(view.scale * 1.5, undefined, undefined, true)}><RiExpandDiagonalLine size={18} aria-hidden="true" /></button>
+      <button type="button" aria-label="Zoom in" disabled={view.scale >= 4} onClick={() => zoom(view.scale * 1.5, undefined, undefined, true)}><Maximize2 size={17} strokeWidth={1.25} aria-hidden="true" /></button>
     </div>
   </div>;
 }
