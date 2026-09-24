@@ -47,7 +47,9 @@ export async function generateMetadata({ searchParams }: PageProps) {
   });
   // A single facet is a page worth finding; empty selections and combinations are not.
   const facets = [...filterSearchParams(filter).keys()].length;
-  return photos.length && facets === 1 ? metadata : { ...metadata, robots: { index: false, follow: true } };
+  // The layout's title template does not reach a page in its own segment.
+  const titled = { ...metadata, title: { absolute: `${label} photographs — Brito` } };
+  return photos.length && facets === 1 ? titled : { ...titled, robots: { index: false, follow: true } };
 }
 
 export default async function HomePage({ searchParams }: PageProps) {
