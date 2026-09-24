@@ -127,6 +127,7 @@ export async function POST(req: NextRequest) {
     // read; never leave a photograph whose original is gone.
     if (await s3Size(key) === undefined) {
       await db.delete(photos).where(eq(photos.id, photo.id));
+      await s3Delete(thumbnailKey).catch(() => {});
       return NextResponse.json({ error: 'This upload was discarded while it was being added.' }, { status: 409 });
     }
     await syncDestinationCollections([photo.id]);

@@ -1,6 +1,6 @@
 import type { Photo } from '@/db';
 import { formatCameraName } from './camera';
-import { shortPhotoLocation } from './location';
+import { knownLocationFromTags, shortPhotoLocation } from './location';
 import { labelForFujifilmSimulation } from '@/exif/fujifilm';
 import { formatAppleLensText, isLensApple } from '@/platforms/apple';
 
@@ -40,6 +40,16 @@ export const cameraOf = (p: Pick<Photo, 'make' | 'model'>): string | undefined =
   return parts.length > 0 ? parts.join(' ') : undefined;
 };
 
+/**
+ * Where a photograph was taken, for the Places filter: its address, or a place
+ * known from its tags. Unlike the display label, never an arbitrary first tag,
+ * so subjects such as "street" stay out of Places.
+ */
+export const placeOf = (p: Pick<Photo, 'locationName' | 'tags'>): string | undefined =>
+  p.locationName?.trim() ? shortPhotoLocation(p) : knownLocationFromTags(p.tags);
+
+const isPlaceTag = (tag: string) => Boolean(knownLocationFromTags([tag]));
+
 // The capture date as the camera recorded it, so a photograph filed under a year
 // on the page is found by that year's filter whatever the server's time zone.
 const yearOf = (p: Pick<Photo, 'takenAtNaive'>): number | undefined => {
@@ -69,7 +79,7 @@ export const isFiltered = (filter: PhotoFilter) => Object.values(filter).some(Bo
 export function applyPhotoFilter<T extends FilterablePhoto>(photos: T[], filter: PhotoFilter): T[] {
   return photos.filter(p => {
     if (filter.tag && !(p.tags ?? []).includes(filter.tag)) return false;
-    if (filter.place && shortPhotoLocation(p) !== filter.place) return false;
+    if (filter.place && placeOf(p) !== filter.place) return false;
     if (filter.film && p.film !== filter.film) return false;
     if (filter.camera && cameraOf(p) !== filter.camera) return false;
     if (filter.lens && p.lensModel !== filter.lens) return false;
@@ -125,12 +135,13 @@ const tally = (entries: Array<{ value: string; label?: string }>): FacetValue[] 
 
 export function buildPhotoFacets(photos: FilterablePhoto[]): PhotoFacets {
   return {
+    // Place names among the tags are listed under Places, not twice.
     tags: tally(
-      photos.flatMap(p => (p.tags ?? []).map(t => ({ value: t }))),
+      photos.flatMap(p => (p.tags ?? []).filter(t => !isPlaceTag(t)).map(t => ({ value: t }))),
     ),
     places: tally(
       photos
-        .map(p => shortPhotoLocation(p))
+        .map(p => placeOf(p))
         .filter((v): v is string => Boolean(v))
         .map(v => ({ value: v })),
     ),

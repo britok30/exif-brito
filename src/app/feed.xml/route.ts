@@ -12,7 +12,10 @@ const escape = (value: string) => value.replace(/[<>&'"]/g, char => ({ '<': '&lt
 
 /** The newest photographs as RSS, each with a web-sized rendition for readers. */
 export async function GET() {
-  const photos = (await getPhotos()).filter(photo => !photo.excludeFromFeeds).slice(0, ITEMS);
+  // Newest to the archive first, so an old photograph published today still reaches readers.
+  const published = (photo: { createdAt: Date | null; takenAt: Date }) => new Date(photo.createdAt ?? photo.takenAt).getTime();
+  const photos = (await getPhotos()).filter(photo => !photo.excludeFromFeeds)
+    .sort((a, b) => published(b) - published(a)).slice(0, ITEMS);
   const items = photos.map(photo => {
     const link = absoluteUrl(`/p/${photo.id}`);
     const image = absoluteUrl(`/_next/image?url=${encodeURIComponent(imagePath(photo.thumbnailUrl || photo.url))}&w=1440&q=80`);
@@ -26,7 +29,7 @@ export async function GET() {
       <guid isPermaLink="true">${link}</guid>
       <pubDate>${new Date(published).toUTCString()}</pubDate>
       <description>${escape(`<p><img src="${image}" alt="${escape(alt)}" /></p>${summary ? `<p>${escape(summary).replace(/\n\n/g, '</p><p>')}</p>` : ''}`)}</description>
-      <media:content url="${escape(image)}" medium="image" type="image/jpeg"${photo.width ? ` width="${Math.min(1440, photo.width)}"` : ''} />
+      <media:content url="${escape(image)}" medium="image"${photo.width ? ` width="${Math.min(1440, photo.width)}"` : ''} />
 ${(photo.tags ?? []).map(tag => `      <category>${escape(tag)}</category>`).join('\n')}
     </item>`;
   });

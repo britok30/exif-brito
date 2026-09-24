@@ -21,7 +21,7 @@ import { cache } from 'react';
 import { getPhotoById, getPhotoIndex } from '@/photo/query';
 import { formatCaptureDate, formatExposureTime } from '@/photo/format';
 import { formatCameraName } from '@/photo/camera';
-import { cameraOf, filterHref, lensLabel } from '@/photo/filters';
+import { cameraOf, filterHref, lensLabel, placeOf } from '@/photo/filters';
 import { shortPhotoLocation } from '@/photo/location';
 import { RecipeDialog } from '@/photo/RecipeDialog';
 import { labelForFujifilmSimulation, type FujifilmRecipe } from '@/exif/fujifilm';
@@ -124,7 +124,7 @@ export default async function PhotoPage({ params }: Props) {
           <section aria-labelledby="photo-map-heading">
             <div className="mb-5 flex items-baseline justify-between gap-6">
               <h2 id="photo-map-heading" className="gallery-label">Where</h2>
-              {place && <Link href={filterHref('place', place)} className="text-sm underline decoration-foreground/40 underline-offset-4 hover:decoration-foreground">More from {place}</Link>}
+              {placeOf(photo) && <Link href={filterHref('place', placeOf(photo)!)} className="text-sm underline decoration-foreground/40 underline-offset-4 hover:decoration-foreground">More from {place}</Link>}
             </div>
             <MapPreview latitude={photo.latitude} longitude={photo.longitude} label={place || title} />
           </section>

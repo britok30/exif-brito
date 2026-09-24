@@ -35,3 +35,11 @@ it('builds stable links and readable titles for a selection', () => {
   expect(describePhotoFilter({ focal: 35, year: 2024 })).toBe('35mm, 2024');
   expect(describePhotoFilter({})).toBeUndefined();
 });
+
+it('keeps subjects out of Places and place tags out of Subjects', () => {
+  const photos = [photo({ tags: ['street'] }), photo({ tags: ['Tokyo', 'night'] })];
+  const facets = buildPhotoFacets(photos);
+  expect(facets.places.map(f => f.value)).toEqual(['Tokyo, Japan']);
+  expect(facets.tags.map(f => f.value).sort()).toEqual(['night', 'street']);
+  expect(applyPhotoFilter(photos, { place: 'street' })).toHaveLength(0);
+});

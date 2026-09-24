@@ -45,8 +45,9 @@ export async function generateMetadata({ searchParams }: PageProps) {
     description: `${photos.length} ${photos.length === 1 ? 'photograph' : 'photographs'} in Brito’s photographic journal: ${label}.`,
     path: `/?${filterSearchParams(filter)}`, photoId: photos[0]?.id,
   });
-  // Empty selections are not worth indexing.
-  return photos.length ? metadata : { ...metadata, robots: { index: false, follow: true } };
+  // A single facet is a page worth finding; empty selections and combinations are not.
+  const facets = [...filterSearchParams(filter).keys()].length;
+  return photos.length && facets === 1 ? metadata : { ...metadata, robots: { index: false, follow: true } };
 }
 
 export default async function HomePage({ searchParams }: PageProps) {

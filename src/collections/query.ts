@@ -1,7 +1,8 @@
-import { and, asc, desc, eq, isNull, or } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, or, sql } from 'drizzle-orm';
 import { unstable_cache } from 'next/cache';
 import { db, albums, albumPhoto, photos } from '@/db';
-import { galleryColumns, PHOTOS_TAG, reviveDates } from '@/photo/query';
+import { galleryColumns, MAX_INLINE_BLUR_LENGTH, PHOTOS_TAG, reviveDates } from '@/photo/query';
+import { BLUR_TILES } from '@/photo/gallery-photo';
 
 const visible = or(eq(photos.hidden, false), isNull(photos.hidden));
 
@@ -33,7 +34,13 @@ export const getCollections = (includeHidden = false) => includeHidden ? loadCol
 const cachedCollection = unstable_cache(async (slug: string) => {
   const [collection] = await db.select().from(albums).where(eq(albums.slug, slug)).limit(1);
   if (!collection) return null;
-  const members = await db.select(galleryColumns(true)).from(albumPhoto).innerJoin(photos, eq(photos.id, albumPhoto.photoId))
+  // Blur placeholders only for the first screens, as on the home page, so a
+  // large series stays well inside the 2 MB cache entry limit.
+  const members = await db.select({
+    ...galleryColumns(false),
+    blurData: sql<string | null>`case when row_number() over (order by ${albumPhoto.sortOrder}, ${albumPhoto.photoId}) <= ${BLUR_TILES}
+      and length(${photos.blurData}) <= ${MAX_INLINE_BLUR_LENGTH} then ${photos.blurData} end`,
+  }).from(albumPhoto).innerJoin(photos, eq(photos.id, albumPhoto.photoId))
     .where(and(eq(albumPhoto.albumId, collection.id), visible))
     .orderBy(asc(albumPhoto.sortOrder), asc(albumPhoto.photoId));
   return members.length ? { ...collection, photos: members } : null;

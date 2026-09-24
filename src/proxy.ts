@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { isOwner, isSameOriginMutation } from '@/security/owner';
 import { NextResponse } from 'next/server';
+import { CONTENT_SECURITY_POLICY } from '@/security/headers';
 
 export default auth(req => {
   if (isOwner(req.auth)) {
@@ -9,7 +10,8 @@ export default auth(req => {
     response.headers.set('Cache-Control', 'private, no-store');
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
     response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('Content-Security-Policy', "frame-ancestors 'none'");
+    // The full site policy: headers set here replace next.config's, so a narrower value would weaken owner routes.
+    response.headers.set('Content-Security-Policy', CONTENT_SECURITY_POLICY);
     return response;
   }
 

@@ -9,6 +9,7 @@ import { useReducedMotion } from 'motion/react';
 import IconSearch from '@/components/icons/IconSearch';
 import { loadIndex } from './index-loader';
 import type { SearchEntry } from './types';
+import { SHORTCUTS_OFF_KEY, shortcutsEnabled } from './SearchProvider';
 
 /**
  * The ⌘K palette. It is its own chunk, loaded when the browser is idle or the
@@ -61,7 +62,16 @@ function SearchPalette() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, attempt]);
 
-  const explore = useMemo(() => EXPLORE.map(item => ({ ...item, section: { name: 'Explore', priority: 3 }, perform: () => router.push(item.path) })), [router]);
+  const [shortcuts, setShortcuts] = useState(shortcutsEnabled);
+  const explore = useMemo(() => [
+    ...EXPLORE.map(item => ({ ...item, subtitle: shortcuts ? item.subtitle : undefined, section: { name: 'Explore', priority: 3 }, perform: () => router.push(item.path) })),
+    { id: 'settings:shortcuts', name: shortcuts ? 'Turn off single-key shortcuts' : 'Turn on single-key shortcuts', keywords: 'keyboard shortcuts keys',
+      section: { name: 'Explore', priority: 3 }, perform: () => {
+        const next = !shortcuts;
+        try { if (next) window.localStorage.removeItem(SHORTCUTS_OFF_KEY); else window.localStorage.setItem(SHORTCUTS_OFF_KEY, '1'); } catch { /* storage unavailable: nothing to remember */ }
+        setShortcuts(next);
+      } },
+  ], [router, shortcuts]);
   const collections = useMemo(() => entries.filter(entry => entry.section === 'Collections')
     .map(entry => ({ ...entry, section: { name: 'Collections', priority: 2 }, perform: () => router.push(entry.path) })), [entries, router]);
   // Photographs join the list once the visitor types, so an empty palette is a short menu rather than 800 rows.

@@ -17,7 +17,7 @@ vi.mock('@/db', async () => ({
     delete: () => ({ where: async () => { mocks.deleted++; } }),
   },
 }));
-import { GLOBAL_LIMIT, PER_SOURCE_LIMIT, recordSignInFailure, signInBlocked, signInSource } from './sign-in-limit';
+import { GLOBAL_LIMIT, PER_SOURCE_LIMIT, registerSignInAttempt, signInSource } from './sign-in-limit';
 
 beforeEach(() => { mocks.counts.length = 0; mocks.fail = false; mocks.inserted.length = 0; mocks.deleted = 0; vi.spyOn(console, 'error').mockImplementation(() => {}); });
 
@@ -28,17 +28,18 @@ it('never stores the raw client address', () => {
   expect(signInSource(new Request('https://x.test', { headers: { 'x-forwarded-for': '203.0.113.9, 10.0.0.1' } }))).toBe(source);
 });
 
-it('pauses one address after its limit, and everyone after the global limit', async () => {
-  mocks.counts.push(PER_SOURCE_LIMIT - 1, 0);
-  expect(await signInBlocked('a')).toBe(false);
+it('records the attempt before counting, pauses one address past its limit, and only slows everyone', async () => {
   mocks.counts.push(PER_SOURCE_LIMIT, 0);
-  expect(await signInBlocked('a')).toBe(true);
-  mocks.counts.push(0, GLOBAL_LIMIT);
-  expect(await signInBlocked('b')).toBe(true);
+  expect(await registerSignInAttempt('a')).toEqual({ blocked: false, slow: false });
+  expect(mocks.inserted).toHaveLength(1);
+  mocks.counts.push(PER_SOURCE_LIMIT + 1, 0);
+  expect((await registerSignInAttempt('a')).blocked).toBe(true);
+  // A flood from many addresses never blocks the owner's own address outright.
+  mocks.counts.push(1, GLOBAL_LIMIT + 1);
+  expect(await registerSignInAttempt('owner')).toEqual({ blocked: false, slow: true });
 });
 
 it('fails open when the table is unavailable, so the owner is never locked out by the limiter', async () => {
   mocks.fail = true;
-  expect(await signInBlocked('a')).toBe(false);
-  await expect(recordSignInFailure('a')).resolves.toBeUndefined();
+  expect(await registerSignInAttempt('a')).toEqual({ blocked: false, slow: false });
 });

@@ -13,9 +13,20 @@ const SearchContext = createContext<SearchControls>({ open() {}, warm() {} });
 
 /** Single-key shortcuts, available on every public page. */
 const SHORTCUTS: Record<string, string> = { g: '/', j: '/?view=stacked', c: '/collections', r: '/random' };
+export const SHORTCUTS_OFF_KEY = 'brito:shortcuts-off';
 
-const isTyping = (target: EventTarget | null) =>
-  target instanceof HTMLElement && Boolean(target.closest('input, textarea, select, [contenteditable="true"], [role="dialog"]'));
+/** Visitors can turn single-key shortcuts off from the search palette (WCAG 2.1.4). */
+export function shortcutsEnabled() {
+  try { return window.localStorage.getItem(SHORTCUTS_OFF_KEY) !== '1'; } catch { return true; }
+}
+
+/**
+ * Single keys act only when nothing interactive has focus: not a field, link or
+ * button (so speech input and typing never trigger them), not inside a dialog,
+ * and not while the search palette is open.
+ */
+const idleFocus = (target: EventTarget | null) =>
+  target === document.body || target === document.documentElement || (target instanceof HTMLElement && target.id === 'main');
 
 /**
  * A light shell around the search palette: the button, ⌘K and the site's
@@ -44,9 +55,11 @@ export function SearchProvider({ children }: { children: ReactNode }) {
       if (event.defaultPrevented) return;
       // Once loaded, kbar handles ⌘K itself.
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && !toggle.current) { event.preventDefault(); open(); return; }
-      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey || event.repeat || isTyping(event.target)) return;
-      if (document.querySelector('[role="dialog"]')) return;
+      if (event.metaKey || event.ctrlKey || event.altKey || event.repeat || !idleFocus(event.target)) return;
+      if (document.querySelector('[role="dialog"], .search-positioner') || !shortcutsEnabled()) return;
+      // '/' needs Shift on some keyboard layouts, so it is checked before the Shift guard.
       if (event.key === '/') { event.preventDefault(); open(); return; }
+      if (event.shiftKey) return;
       const href = SHORTCUTS[event.key.toLowerCase()];
       if (href && !window.location.pathname.startsWith('/admin')) { event.preventDefault(); router.push(href); }
     };

@@ -6,8 +6,11 @@ import { getDisplayUrl } from '@/photo/url';
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-/** A photograph's card never changes once rendered (storage keys are immutable), so the CDN keeps it for a week. */
-export const PHOTO_CARD_CACHE = 'public, max-age=3600, s-maxage=604800, stale-while-revalidate=2592000';
+/**
+ * A photograph's card never changes once rendered (storage keys are immutable),
+ * but a photograph hidden later should stop being shared within a day.
+ */
+export const PHOTO_CARD_CACHE = 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=3600';
 /** The site card follows the newest photograph, so it is refreshed hourly. */
 export const SITE_CARD_CACHE = 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400';
 

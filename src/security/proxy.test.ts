@@ -21,7 +21,11 @@ it('allows the owner with private and anti-framing headers', () => {
   expect(response.headers.get('x-middleware-next')).toBe('1');
   expect(response.headers.get('cache-control')).toBe('private, no-store');
   expect(response.headers.get('x-frame-options')).toBe('DENY');
-  expect(response.headers.get('content-security-policy')).toBe("frame-ancestors 'none'");
+  // The full site policy, not a narrower one that would replace it on owner routes.
+  const policy = response.headers.get('content-security-policy');
+  expect(policy).toContain("frame-ancestors 'none'");
+  expect(policy).toContain("object-src 'none'");
+  expect(policy).toContain("script-src 'self'");
 });
 it('denies cross-origin writes with an otherwise valid owner session', () => {
   expect(run(request('/api/photos', { user: { email: 'owner@example.com' } }, 'POST', 'https://evil.example')).status).toBe(403);
