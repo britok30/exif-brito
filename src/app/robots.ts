@@ -2,7 +2,10 @@ import type { MetadataRoute } from 'next';
 import { absoluteUrl } from '@/seo/site';
 export default function robots(): MetadataRoute.Robots {
   return { rules:[
-    {userAgent:'*',allow:['/','/api/image/'],disallow:['/admin/','/sign-in','/api/','/live']},
+    {userAgent:'*',allow:['/','/api/image/'],disallow:['/admin/','/sign-in','/api/','/live',
+      // Stacked filters (two or more parameters) and the layout switch: unbounded
+      // combinations of one gallery. Single-filter pages like /?camera=… stay open.
+      '/*?*&','/*?view=']},
     // No AI use of these personal photographs: training, assistants or AI search.
     // Cloudflare's WAF also blocks these user agents outright; Google-Extended and
     // Applebot-Extended are robots-only tokens (they opt the search crawlers'

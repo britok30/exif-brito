@@ -59,7 +59,8 @@ export const ViewSwitcher = withSearchParams(function ViewSwitcher({ search: sea
     scrolling.current = animate(from, to, { ...LAYOUT_TRANSITION, onUpdate: top => window.scrollTo({ top, behavior: 'instant' }) });
   }, [view, reduceMotion]);
 
-  const link = (target: PhotoView, label: string) => <a href={hrefFor(target)}
+  // The layout is a reader's preference, not another page for crawlers.
+  const link = (target: PhotoView, label: string) => <a href={hrefFor(target)} rel="nofollow"
     onClick={event => {
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
       event.preventDefault();

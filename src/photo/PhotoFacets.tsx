@@ -61,6 +61,11 @@ function FacetRow({ section, searchParams }: { section: SectionDef; searchParams
   const [expanded, setExpanded] = useState(false);
   const valuesId = useId();
 
+  // A link that would stack a second filter (or carry the layout choice) is
+  // one more combination, not a page worth crawling; the combinations are
+  // unbounded and kept a crawler busy for weeks (Applebot, Sep–Oct 2026).
+  const isCombination = (href: string) => [...new URLSearchParams(href.split('?')[1] ?? '').keys()].length > 1;
+
   const buildHref = (value: string) => {
     const sp = new URLSearchParams(searchParams.toString());
     if (sp.get(section.kind) === value) {
@@ -89,6 +94,7 @@ function FacetRow({ section, searchParams }: { section: SectionDef; searchParams
             <li key={value}>
               <Link
                 href={buildHref(value)}
+                rel={isCombination(buildHref(value)) ? 'nofollow' : undefined}
                 scroll={false}
                 aria-current={isActive ? 'true' : undefined}
                 className={cn(

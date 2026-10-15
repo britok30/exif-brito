@@ -40,7 +40,8 @@ export async function homeMetadata(filter: PhotoFilter) {
   const facets = [...filterSearchParams(filter).keys()].length;
   // The layout's title template does not reach a page in its own segment.
   const titled = { ...metadata, title: { absolute: `${label} photographs — Brito` } };
-  return photos.length && facets === 1 ? titled : { ...titled, robots: { index: false, follow: true } };
+  // Neither indexed nor followed: following a combination only leads to more combinations.
+  return photos.length && facets === 1 ? titled : { ...titled, robots: { index: false, follow: false } };
 }
 
 export async function HomeGallery({ filter, isAdmin }: { filter: PhotoFilter; isAdmin: boolean }) {
