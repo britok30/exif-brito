@@ -3,7 +3,13 @@ import { absoluteUrl } from '@/seo/site';
 export default function robots(): MetadataRoute.Robots {
   return { rules:[
     {userAgent:'*',allow:['/','/api/image/'],disallow:['/admin/','/sign-in','/api/','/live']},
-    // Also retain these preferences at the origin, outside Cloudflare's managed robots response.
-    {userAgent:['Amazonbot','Applebot-Extended','Bytespider','CCBot','ClaudeBot','CloudflareBrowserRenderingCrawler','Google-Extended','GPTBot','meta-externalagent'],disallow:'/'},
+    // No AI use of these personal photographs: training, assistants or AI search.
+    // Cloudflare's WAF also blocks these user agents outright; Google-Extended and
+    // Applebot-Extended are robots-only tokens (they opt the search crawlers'
+    // fetches out of AI training) and can only be expressed here.
+    {userAgent:['Amazonbot','Applebot-Extended','Bytespider','CCBot','ChatGPT-User','Claude-SearchBot','Claude-User','Claude-Web','ClaudeBot','anthropic-ai',
+      'CloudflareBrowserRenderingCrawler','cohere-ai','cohere-training-data-crawler','Diffbot','DuckAssistBot','FacebookBot','Gemini-Deep-Research','Google-CloudVertexBot',
+      'Google-Extended','GPTBot','ImagesiftBot','img2dataset','meta-externalagent','meta-externalfetcher','MistralAI-User','OAI-SearchBot','omgili','PerplexityBot',
+      'Perplexity-User','Timpibot','YouBot','AI2Bot','Kangaroo Bot','PanguBot'],disallow:'/'},
   ],sitemap:absoluteUrl('/sitemap.xml') };
 }
