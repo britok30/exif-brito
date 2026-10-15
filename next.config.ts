@@ -1,6 +1,25 @@
 import type { NextConfig } from "next";
 import { SECURITY_HEADERS } from "./src/security/headers";
 
+/** Auth.js session cookies (plain over http in development, __Secure- over https). */
+const SESSION_COOKIES = ['__Secure-authjs.session-token', 'authjs.session-token'];
+/** Query keys that narrow the gallery (src/photo/filters.ts); `view` is client-only and stays static. */
+const FILTER_KEYS = ['tag', 'place', 'film', 'camera', 'lens', 'focal', 'year'];
+
+/**
+ * The home and photograph pages are static for visitors. A request carrying a
+ * session (the owner, who sees studio controls and hidden photographs) or a
+ * gallery filter is rewritten, before the cache, to the per-request /live
+ * routes instead. The address the browser shows does not change.
+ */
+const LIVE_REWRITES = [
+  ...SESSION_COOKIES.flatMap(key => [
+    { source: '/', has: [{ type: 'cookie' as const, key }], destination: '/live' },
+    { source: '/p/:id', has: [{ type: 'cookie' as const, key }], destination: '/live/p/:id' },
+  ]),
+  ...FILTER_KEYS.map(key => ({ source: '/', has: [{ type: 'query' as const, key }], destination: '/live' })),
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
@@ -11,6 +30,9 @@ const nextConfig: NextConfig = {
         { key: 'X-Content-Type-Options', value: 'nosniff' },
       ] },
     ];
+  },
+  async rewrites() {
+    return { beforeFiles: LIVE_REWRITES };
   },
   async redirects() {
     return [{ source: '/en/admin/:path*', destination: '/admin/:path*', permanent: false }];

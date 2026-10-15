@@ -1,22 +1,22 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { PhotoTile } from './PhotoTile';
 import { JournalViewContext } from './journal-view';
 import type { GalleryPhoto } from './gallery-photo';
 import { filterSearchParams, type PhotoFilter } from './filters';
+import { withSearchParams, type SearchParamsLike } from './search-params';
 
 export interface MorePhotos { year: string; total: number; filter: PhotoFilter }
 
-export function PhotoCollection({ photos, isAdmin, priority = true, more }: {
+export const PhotoCollection = withSearchParams(function PhotoCollection({ photos, isAdmin, priority = true, more, search }: {
   photos: GalleryPhoto[];
   isAdmin?: boolean;
   priority?: boolean;
   /** When set, tiles beyond the ones rendered on the server arrive in batches as the reader scrolls. */
   more?: MorePhotos;
+  search: SearchParamsLike;
 }) {
-  const search = useSearchParams();
   const journal = search.get('view') === 'stacked';
   const [loaded, setLoaded] = useState<GalleryPhoto[]>([]);
   const all = loaded.length ? [...photos, ...loaded] : photos;
@@ -30,7 +30,7 @@ export function PhotoCollection({ photos, isAdmin, priority = true, more }: {
     </div>
     {more && remaining > 0 && <LoadMore key={all.length} more={more} offset={all.length} onLoaded={batch => setLoaded(current => [...current, ...batch])} />}
   </JournalViewContext.Provider>;
-}
+});
 
 const BATCH = 96;
 

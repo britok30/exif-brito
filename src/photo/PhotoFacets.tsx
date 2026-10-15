@@ -3,14 +3,15 @@
 import Link from 'next/link';
 import { useId, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { labelForFujifilmSimulation } from '@/exif/fujifilm';
 import { isLensApple, formatAppleLensText } from '@/platforms/apple';
 import { cn } from '@/lib/utils';
-import type { FacetKind, FacetValue, PhotoFacets } from './filters';
+import type { FacetKind, FacetValue, PhotoFacets as Facets } from './filters';
+import { withSearchParams, type SearchParamsLike } from './search-params';
 
 interface PhotoFacetsProps {
-  facets: PhotoFacets;
+  facets: Facets;
 }
 
 interface SectionDef {
@@ -20,7 +21,7 @@ interface SectionDef {
   formatLabel?: (label: string) => string;
 }
 
-export function PhotoFacets({ facets }: PhotoFacetsProps) {
+export const PhotoFacets = withSearchParams(function PhotoFacets({ facets, search }: PhotoFacetsProps & { search: SearchParamsLike }) {
   const allSections: SectionDef[] = [
     { kind: 'year', heading: 'Years', values: facets.years },
     { kind: 'place', heading: 'Places', values: facets.places },
@@ -48,15 +49,14 @@ export function PhotoFacets({ facets }: PhotoFacetsProps) {
   return (
     <div className="space-y-5">
       {sections.map(section => (
-        <FacetRow key={section.kind} section={section} />
+        <FacetRow key={section.kind} section={section} searchParams={search} />
       ))}
     </div>
   );
-}
+});
 
-function FacetRow({ section }: { section: SectionDef }) {
+function FacetRow({ section, searchParams }: { section: SectionDef; searchParams: SearchParamsLike }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const activeValue = searchParams.get(section.kind);
   const [expanded, setExpanded] = useState(false);
   const valuesId = useId();

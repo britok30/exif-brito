@@ -13,7 +13,11 @@ import { galleryPhotos } from '@/photo/gallery-photo';
 import { ViewSwitcher } from '@/photo/ViewSwitcher';
 import { absoluteUrl, serializeJsonLd } from '@/seo/site';
 import { photoLabel } from '@/seo/metadata';
-export const dynamic = 'force-dynamic';
+// Each collection renders on its first visit and is then served from cache;
+// collection and photo changes expire the photos tag and revalidate /collections.
+export function generateStaticParams() {
+  return [];
+}
 const findCollection = cache(getCollection);
 type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props) {

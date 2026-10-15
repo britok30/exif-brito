@@ -14,6 +14,7 @@ import { LibraryFilters } from '@/photo/LibraryFilters';
 import { viewerPhoto } from '@/photo/viewer-data';
 import { selectLibraryPage, type LibraryParams } from '@/photo/library';
 import { libraryHref, libraryPath, type LibraryVisibility } from '@/photo/library-routes';
+import { PerRequestSearchParams } from '@/photo/search-params';
 
 export async function PhotoLibraryPage({ params, visibility }: { params: LibraryParams; visibility: LibraryVisibility }) {
   const path = libraryPath(visibility);
@@ -23,7 +24,7 @@ export async function PhotoLibraryPage({ params, visibility }: { params: Library
   const entries = galleryPhotos(selection.entries, Infinity);
   const hidden = library.filter(photo => photo.hidden).length;
   const pageHref = (page: number) => libraryHref(visibility, { ...params, page: String(page) });
-  return <PhotoViewerProvider seed={entries.map(viewerPhoto)}><main id="main" tabIndex={-1} className="archive-page">
+  return <PerRequestSearchParams><PhotoViewerProvider seed={entries.map(viewerPhoto)}><main id="main" tabIndex={-1} className="archive-page">
     <GalleryHeader />
     <StudioIntro title={visibility === 'hidden' ? 'Unpublished.' : visibility === 'published' ? 'Published.' : 'Your photographs.'}
       note={visibility === 'published' ? <>Everything on view,<br />newest first.</> : visibility === 'hidden' ? <>Waiting for your eye.<br />Publish when you’re ready.</> : <>The whole library,<br />on view and waiting.</>}
@@ -46,5 +47,5 @@ export async function PhotoLibraryPage({ params, visibility }: { params: Library
       </nav>}
       </LibrarySelection>
     </section>
-  </main></PhotoViewerProvider>;
+  </main></PhotoViewerProvider></PerRequestSearchParams>;
 }

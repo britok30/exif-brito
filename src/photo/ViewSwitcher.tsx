@@ -3,17 +3,17 @@
 import Link from 'next/link';
 import IconGrid from '@/components/icons/IconGrid';
 import IconStacked from '@/components/icons/IconStacked';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { animate, useReducedMotion } from 'motion/react';
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { LAYOUT_TRANSITION } from './PhotoTile';
 import type { PhotoView } from './view';
+import { withSearchParams, type SearchParamsLike } from './search-params';
 
 interface Anchor { id: string; top: number }
 
-export function ViewSwitcher() {
+export const ViewSwitcher = withSearchParams(function ViewSwitcher({ search: searchParams }: { search: SearchParamsLike }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const view = searchParams.get('view') === 'stacked' ? 'stacked' : 'grid';
   const reduceMotion = useReducedMotion();
   const anchor = useRef<Anchor | null>(null);
@@ -71,14 +71,12 @@ export function ViewSwitcher() {
   return <nav aria-label="Gallery layout" className="archive-view-switch slash-toggle">
     {link('grid', 'Gallery')}<span aria-hidden="true">/</span>{link('stacked', 'Journal')}
   </nav>;
-}
+});
 
-export function ClearPhotoSelection({ children, className }: { children: ReactNode; className?: string }) {
-  const search = useSearchParams();
+export const ClearPhotoSelection = withSearchParams(function ClearPhotoSelection({ children, className, search }: { children: ReactNode; className?: string; search: SearchParamsLike }) {
   return <Link href={search.get('view') === 'stacked' ? '/?view=stacked' : '/'} className={className}>{children}</Link>;
-}
+});
 
-export function PreservePhotoView() {
-  const search = useSearchParams();
+export const PreservePhotoView = withSearchParams(function PreservePhotoView({ search }: { search: SearchParamsLike }) {
   return search.get('view') === 'stacked' ? <input type="hidden" name="view" value="stacked" /> : null;
-}
+});

@@ -8,7 +8,7 @@ import { Reveal } from '@/components/motion/reveal';
 import { ImageReveal } from '@/photo/ImageReveal';
 import { getCollections } from '@/collections/query';
 import { imagePath } from '@/photo/url';
-export const dynamic = 'force-dynamic';
+// Served from cache; collection and photo changes expire the photos tag and revalidate /collections.
 export async function generateMetadata() {
   const cover = (await getPhotos(1))[0];
   return publicMetadata({title:'Photography Collections',description:'Explore Brito’s photography by destination. Visual journeys through cities, coastlines, and everyday life.',path:'/collections',photoId:cover?.id});
