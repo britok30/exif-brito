@@ -45,18 +45,28 @@ const LIBRARY_REFRESH_SECONDS = 300;
 const CHUNK = 300;
 const scopeWhere = (scope: Scope) => scope === 'public' ? publicOnly : undefined;
 
-const countPhotos = unstable_cache(
-  async (scope: Scope) => Number((await db.select({ total: count() }).from(photos).where(scopeWhere(scope)))[0]?.total ?? 0),
-  ['photos', 'count'], { tags: [PHOTOS_TAG], revalidate: LIBRARY_REFRESH_SECONDS },
-);
-const listChunk = unstable_cache(
-  async (scope: Scope, index: number): Promise<Photo[]> => db.select(galleryColumns(index === 0)).from(photos)
-    .where(scopeWhere(scope)).orderBy(...newestFirst).limit(CHUNK).offset(index * CHUNK),
-  ['photos', 'chunk'], { tags: [PHOTOS_TAG], revalidate: LIBRARY_REFRESH_SECONDS },
-);
+/**
+ * The public list changes only through the app (publishing, editing, removing),
+ * and every such change expires the tag, so it never expires on a timer: under
+ * crawler load each expiry set off a stampede of parallel rebuilds from the
+ * database (~250 GiB of egress a day, Oct 2026). Only the studio, which must
+ * see imports written straight to the database, refreshes periodically.
+ */
+const cacheOptions = (scope: Scope) => ({ tags: [PHOTOS_TAG], ...(scope === 'library' ? { revalidate: LIBRARY_REFRESH_SECONDS } : {}) });
+const countQuery = async (scope: Scope) => Number((await db.select({ total: count() }).from(photos).where(scopeWhere(scope)))[0]?.total ?? 0);
+const chunkQuery = async (scope: Scope, index: number): Promise<Photo[]> => db.select(galleryColumns(index === 0)).from(photos)
+  .where(scopeWhere(scope)).orderBy(...newestFirst).limit(CHUNK).offset(index * CHUNK);
+const countPhotos = {
+  public: unstable_cache(countQuery, ['photos', 'count'], cacheOptions('public')),
+  library: unstable_cache(countQuery, ['photos', 'count'], cacheOptions('library')),
+};
+const listChunk = {
+  public: unstable_cache(chunkQuery, ['photos', 'chunk'], cacheOptions('public')),
+  library: unstable_cache(chunkQuery, ['photos', 'chunk'], cacheOptions('library')),
+};
 async function listPhotos(scope: Scope): Promise<Photo[]> {
-  const total = await countPhotos(scope);
-  const chunks = await Promise.all(Array.from({ length: Math.ceil(total / CHUNK) }, (_, index) => listChunk(scope, index)));
+  const total = await countPhotos[scope](scope);
+  const chunks = await Promise.all(Array.from({ length: Math.ceil(total / CHUNK) }, (_, index) => listChunk[scope](scope, index)));
   return chunks.flat().map(reviveDates);
 }
 
